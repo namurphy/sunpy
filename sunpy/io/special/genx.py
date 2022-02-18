@@ -56,7 +56,7 @@ def read_struct_skeleton(xdrdata):
                 arr_size[0] = arr_size[1]
             if arr_size[-1] > 1:
                 tagdict[tt] = np.array([read_struct_skeleton(xdrdata)] *
-                                       arr_size[-1]).reshape(arr_size[0:-2])
+                                       arr_size[-1]).reshape(arr_size[:-2])
             else:
                 tagdict[tt] = read_struct_skeleton(xdrdata)
         else:
@@ -98,7 +98,7 @@ def struct_to_data(xdrdata, subskeleton):
         if isinstance(subskeleton[key], OrderedDict):
             struct_to_data(xdrdata, subskeleton[key])
         elif isinstance(subskeleton[key], np.ndarray):
-            testlist = list()
+            testlist = []
             struct_shape = subskeleton[key].shape
             for elem in subskeleton[key].flatten():
                 elem2 = copy.deepcopy(elem)

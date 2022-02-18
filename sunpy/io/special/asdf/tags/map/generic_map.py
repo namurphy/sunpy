@@ -29,8 +29,7 @@ class GenericMapType(SunPyType):
 
     @classmethod
     def to_tree(cls, smap, ctx):
-        node = {}
-        node['data'] = np.asarray(smap.data)
+        node = {'data': np.asarray(smap.data)}
         node['meta'] = dict(smap.meta)
         node['shift'] = u.Quantity(smap.shifted_value)
         node['mask'] = smap.mask

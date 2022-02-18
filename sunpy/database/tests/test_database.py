@@ -484,7 +484,7 @@ def test_hek_query_download(monkeypatch, database, tmpdir):
         return result
 
     def mock_entries_from_dir(*args, **kwargs):
-        for i in range(10):
+        for _ in range(10):
             yield DatabaseEntry()
 
     monkeypatch.setattr(Downloader, "download", mock_parfive_download)
@@ -505,9 +505,8 @@ def num_entries_from_vso_query(db, query, path=None, file_pattern='',
     db.download_from_vso_query_result(
         query, path=path, overwrite=overwrite)
     fits_pattern = file_pattern
-    num_of_fits_headers = sum(
+    return sum(
         len(fits.get_header(file)) for file in glob.glob(fits_pattern))
-    return num_of_fits_headers
 
 
 @pytest.mark.remote_data
@@ -961,7 +960,7 @@ def test_fetch(database, download_query, tmpdir):
     assert len(database) == 0
     database.redo()
     # Make this resilitent to vso changes while we chase this up with VSO 2018-03-07
-    assert len(database) in (2, 4)
+    assert len(database) in {2, 4}
 
 
 @pytest.mark.remote_data
@@ -980,7 +979,7 @@ def test_fetch_duplicates(database, download_query, tmpdir):
     download_time = database[0].download_time
     database.fetch(*download_query, path=str(tmpdir.join('{file}.fits')))
     # Make this resilitent to vso changes while we chase this up with VSO 2018-03-07
-    assert len(database) in (2, 4)
+    assert len(database) in {2, 4}
     # The old file should be untouched because of the query result block
     # level caching
     assert database[0].download_time == download_time
@@ -996,10 +995,10 @@ def test_fetch(database, download_query, tmpdir):
     assert len(database) == 0
     database.default_waveunit = 'angstrom'
     database.fetch(*download_query, path=str(tmpdir.join('{file}.fits')))
-    assert len(database) in (2, 4)
+    assert len(database) in {2, 4}
     download_time = database[0].download_time
     database.fetch(*download_query, path=str(tmpdir.join('{file}.fits')))
-    assert len(database) in (2, 4)
+    assert len(database) in {2, 4}
     assert database[0].download_time == download_time
 
 

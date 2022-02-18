@@ -19,8 +19,7 @@ def hek_client_creator():
     hekEvent = attrs.hek.EventType(eventType)
 
     h = hek.HEKClient()
-    hek_query = h.search(hekTime, hekEvent)
-    return hek_query
+    return h.search(hekTime, hekEvent)
 
 
 def test_eventtype_collide():

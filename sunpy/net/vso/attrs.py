@@ -122,10 +122,7 @@ class Quicklook(_attr.SimpleAttr):
 
     def __init__(self, value):
         super().__init__(value)
-        if self.value:
-            self.value = 1
-        else:
-            self.value = 0
+        self.value = 1 if self.value else 0
 
 
 class Filter(_attr.SimpleAttr):
@@ -163,9 +160,7 @@ def _apply(wlk, root, api, block):
     """ Implementation detail. """
     for k, v in root.attrs.items():
         name = k[0]
-        subkey = k[1:]
-
-        if subkey:
+        if subkey := k[1:]:
             if len(subkey) != 1:
                 raise ValueError("Can't parse double nested ValueAttr")
             subkey = subkey[0]

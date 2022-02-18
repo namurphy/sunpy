@@ -6,6 +6,7 @@ Plotting points on a Map with WCSAxes
 This example demonstrates the plotting of a point, a line and an arch in pixel coordinates,
 world coordinates, and SkyCoords respectively when plotting a map with WCSAxes.
 """
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -33,11 +34,13 @@ my_map.plot(axes=ax, clip_interval=(1, 99.9)*u.percent)
 xx = np.arange(0, 500)
 yy = xx
 
-# Note that the coordinates need to be in degrees rather than arcseconds.
-ax.plot(xx*u.arcsec.to(u.deg), yy*u.arcsec.to(u.deg),
-        color='r',
-        transform=ax.get_transform("world"),
-        label=f'WCS coordinate [{0*u.arcsec}, {500*u.arcsec}]')
+ax.plot(
+    yy * u.arcsec.to(u.deg),
+    yy * u.arcsec.to(u.deg),
+    color='r',
+    transform=ax.get_transform("world"),
+    label=f'WCS coordinate [{0*u.arcsec}, {500*u.arcsec}]',
+)
 
 # Here we will plot a point in pixel coordinates (i.e. array index).
 # Let's define a pixel coordinate in the middle of the image, `pixel_coord`.

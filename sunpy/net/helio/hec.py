@@ -147,7 +147,7 @@ class HECClient(BaseClient):
                 raise ValueError(
                     f"{elem.__class__.__name__} should be a ``attrs.Time``, ``attrs.hek.MaxRecords`` or ``attrs.hek.TableName`` attribute.")
         qrdict.update(kwargs)
-        table = qrdict.get('table_name', None)
+        table = qrdict.get('table_name')
         if table:
             if isinstance(table, bytes):
                 warn('type `bytes` for table_name is deprecated, use `str` instead.', SunpyDeprecationWarning)
@@ -264,7 +264,7 @@ class HECClient(BaseClient):
         while True:
             user_input = input(f"\nPlease enter a table number between 1 and {len(table_list)} "
                                "('e' to exit): ")
-            if user_input.lower() == "e" or user_input.lower() == "exit":
+            if user_input.lower() in ["e", "exit"]:
                 return None
             if user_input.isdigit() and 1 <= int(user_input) <= len(table_list):
                 table_no = int(user_input)

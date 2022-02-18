@@ -430,9 +430,7 @@ def solar_angle_equivalency(observer):
     sun_coord = get_body_heliographic_stonyhurst("sun", time=obstime, observer=observer)
     sun_observer_distance = sun_coord.separation_3d(observer).to_value(u.m)
 
-    equiv = [(u.radian,
+    return [(u.radian,
               u.meter,
               lambda x: np.tan(x)*sun_observer_distance,
               lambda x: np.arctan(x/sun_observer_distance))]
-
-    return equiv

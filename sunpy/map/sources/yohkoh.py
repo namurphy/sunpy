@@ -45,7 +45,7 @@ class SXTMap(GenericMap):
 
         self.meta['detector'] = "SXT"
         self.meta['telescop'] = "Yohkoh"
-        self.plot_settings['cmap'] = 'yohkohsxt' + self.measurement[0:2].lower()
+        self.plot_settings['cmap'] = f'yohkohsxt{self.measurement[:2].lower()}'
         self.plot_settings['norm'] = ImageNormalize(
             stretch=source_stretch(self.meta, PowerStretch(0.5)), clip=False)
 

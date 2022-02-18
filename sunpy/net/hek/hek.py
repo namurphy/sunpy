@@ -75,7 +75,7 @@ class HEKClient(BaseClient):
             results.extend(result['result'])
 
             if not result['overmax']:
-                if len(results) > 0:
+                if results:
                     return astropy.table.Table(dict_keys_same(results))
                 else:
                     return astropy.table.Table()
@@ -184,10 +184,7 @@ class HEKRow(Row):
         response = urllib.request.urlopen(url).read()
 
         # Return a string or dict
-        if as_dict:
-            return xml_to_dict(response)
-        else:
-            return response
+        return xml_to_dict(response) if as_dict else response
 
     def get(self, key, default=None):
         try:

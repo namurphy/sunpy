@@ -26,13 +26,7 @@ SWAP_LEVEL1_IMAGE = os.path.join(testpath, 'SWAP/resampled1_swap.fits')
 pytestmark = pytest.mark.filterwarnings("ignore:Invalid 'BLANK' keyword in header")
 
 
-@pytest.mark.parametrize(
-    'fname, hdus, length',
-    [(RHESSI_IMAGE, None, 4),
-     (RHESSI_IMAGE, 1, 1),
-     (RHESSI_IMAGE, [1, 2], 2),
-     (RHESSI_IMAGE, range(0, 1), 2)]
-)
+@pytest.mark.parametrize('fname, hdus, length', [(RHESSI_IMAGE, None, 4), (RHESSI_IMAGE, 1, 1), (RHESSI_IMAGE, [1, 2], 2), (RHESSI_IMAGE, range(1), 2)])
 def read_hdus(fname, hdus, length):
     pairs = sunpy.io.fits.read(fname, hdus=hdus)
     assert len(pairs) == length

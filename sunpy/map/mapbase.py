@@ -456,7 +456,7 @@ class GenericMap(NDData):
 
         """
         with NamedTemporaryFile('w', delete=False, prefix='sunpy.map.', suffix='.html') as f:
-            url = 'file://' + f.name
+            url = f'file://{f.name}'
             f.write(textwrap.dedent(f"""\
                 <html>
                     <title>Quicklook summary for {html.escape(object.__repr__(self))}</title>
@@ -706,7 +706,7 @@ class GenericMap(NDData):
     def nickname(self):
         """An abbreviated human-readable description of the map-type; part of
         the Helioviewer data model."""
-        return self._nickname if self._nickname else self.detector
+        return self._nickname or self.detector
 
     @nickname.setter
     def nickname(self, n):
@@ -925,15 +925,13 @@ class GenericMap(NDData):
                                                       self.meta.get('radius',
                                                                     None)))
 
-        if rsun_arcseconds is None:
-            if 'rsun_ref' not in self.meta:
-                warnings.warn("Missing metadata for solar angular radius: assuming the standard "
-                              "radius of the photosphere as seen from the observer distance.",
-                              SunpyUserWarning)
-            rsun = sun._angular_radius(self.rsun_meters, self.dsun)
-        else:
-            rsun = rsun_arcseconds * u.arcsec
-        return rsun
+        if rsun_arcseconds is not None:
+            return rsun_arcseconds * u.arcsec
+        if 'rsun_ref' not in self.meta:
+            warnings.warn("Missing metadata for solar angular radius: assuming the standard "
+                          "radius of the photosphere as seen from the observer distance.",
+                          SunpyUserWarning)
+        return sun._angular_radius(self.rsun_meters, self.dsun)
 
     @property
     def coordinate_system(self):
@@ -1203,12 +1201,9 @@ class GenericMap(NDData):
 
         """
         msg = ('Image coordinate units for axis {} not present in metadata.')
-        err_message = []
-        for i in [1, 2]:
-            if self.meta.get(f'cunit{i}') is None:
-                err_message.append(msg.format(i, i))
-
-        if err_message:
+        if err_message := [
+            msg.format(i, i) for i in [1, 2] if self.meta.get(f'cunit{i}') is None
+        ]:
             err_message.append(
                 f'See {_META_FIX_URL} for instructions on how to add missing metadata.')
             raise MapMetaValidationError('\n'.join(err_message))
@@ -1395,9 +1390,7 @@ class GenericMap(NDData):
         new_meta['naxis1'] = new_data.shape[1]
         new_meta['naxis2'] = new_data.shape[0]
 
-        # Create new map instance
-        new_map = self._new_instance(new_data, new_meta, self.plot_settings)
-        return new_map
+        return self._new_instance(new_data, new_meta, self.plot_settings)
 
     @u.quantity_input
     def rotate(self, angle: u.deg = None, rmatrix=None, order=4, scale=1.0,

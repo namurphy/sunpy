@@ -134,10 +134,11 @@ class XRSClient(GenericClient):
         """
         metalist = []
         # the data before the re-processed GOES 13, 14, 15 data.
-        if (matchdict["End Time"] < "2009-09-01") or (matchdict["End Time"] >= "2009-09-01" and matchdict["Provider"] == ["sdac"]):
+        if matchdict["End Time"] < "2009-09-01" or matchdict["Provider"] == [
+            "sdac"
+        ]:
             metalist += self._get_metalist_fn(matchdict, self.baseurl_old, self.pattern_old)
 
-        # new data from NOAA.
         else:
             if matchdict["End Time"] >= "2017-02-07":
                 for sat in [16, 17]:
@@ -159,16 +160,31 @@ class XRSClient(GenericClient):
     def register_values(cls):
         from sunpy.net import attrs
         goes_number = [2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
-        adict = {attrs.Instrument: [
-            ("GOES", "The Geostationary Operational Environmental Satellite Program."),
-            ("XRS", "GOES X-ray Sensor")],
-            attrs.Physobs: [('irradiance', 'the flux of radiant energy per unit area.')],
-            attrs.Source: [("GOES", "The Geostationary Operational Environmental Satellite Program.")],
-            attrs.Provider: [('SDAC', 'The Solar Data Analysis Center.'),
-                             ('NOAA', 'The National Oceanic and Atmospheric Administration.')],
-            attrs.goes.SatelliteNumber: [(str(x), f"GOES Satellite Number {x}") for x in goes_number]}
-
-        return adict
+        return {
+            attrs.Instrument: [
+                (
+                    "GOES",
+                    "The Geostationary Operational Environmental Satellite Program.",
+                ),
+                ("XRS", "GOES X-ray Sensor"),
+            ],
+            attrs.Physobs: [
+                ('irradiance', 'the flux of radiant energy per unit area.')
+            ],
+            attrs.Source: [
+                (
+                    "GOES",
+                    "The Geostationary Operational Environmental Satellite Program.",
+                )
+            ],
+            attrs.Provider: [
+                ('SDAC', 'The Solar Data Analysis Center.'),
+                ('NOAA', 'The National Oceanic and Atmospheric Administration.'),
+            ],
+            attrs.goes.SatelliteNumber: [
+                (str(x), f"GOES Satellite Number {x}") for x in goes_number
+            ],
+        }
 
 
 class SUVIClient(GenericClient):
@@ -253,9 +269,10 @@ class SUVIClient(GenericClient):
             wmin = req_wave.min.to(u.Angstrom, equivalencies=u.spectral())
             wmax = req_wave.max.to(u.Angstrom, equivalencies=u.spectral())
             req_wave = a.Wavelength(wmin, wmax)
-            for wave in supported_waves:
-                if wave in req_wave:
-                    all_waves.append(int(wave.value))
+            all_waves.extend(
+                int(wave.value) for wave in supported_waves if wave in req_wave
+            )
+
         else:
             all_waves = [int(i.value) for i in supported_waves]
         all_satnos = matchdict.get('SatelliteNumber')
@@ -298,13 +315,32 @@ class SUVIClient(GenericClient):
     def register_values(cls):
         from sunpy.net import attrs
         goes_number = [16, 17]
-        adict = {attrs.Instrument: [
-            ("SUVI", "GOES Solar Ultraviolet Imager.")],
-            attrs.goes.SatelliteNumber: [(str(x), f"GOES Satellite Number {x}") for x in goes_number],
-            attrs.Source: [('GOES', 'The Geostationary Operational Environmental Satellite Program.')],
-            attrs.Physobs: [('flux', 'a measure of the amount of radiation received by an object from a given source.')],
-            attrs.Provider: [('NOAA', 'The National Oceanic and Atmospheric Administration.')],
-            attrs.Level: [('1b', 'Solar images at six wavelengths with image exposures 10 msec or 1 sec.'),
-                          ('2', 'Weighted average of level-1b product files of SUVI.')],
-            attrs.Wavelength: [('*')]}
-        return adict
+        return {
+            attrs.Instrument: [("SUVI", "GOES Solar Ultraviolet Imager.")],
+            attrs.goes.SatelliteNumber: [
+                (str(x), f"GOES Satellite Number {x}") for x in goes_number
+            ],
+            attrs.Source: [
+                (
+                    'GOES',
+                    'The Geostationary Operational Environmental Satellite Program.',
+                )
+            ],
+            attrs.Physobs: [
+                (
+                    'flux',
+                    'a measure of the amount of radiation received by an object from a given source.',
+                )
+            ],
+            attrs.Provider: [
+                ('NOAA', 'The National Oceanic and Atmospheric Administration.')
+            ],
+            attrs.Level: [
+                (
+                    '1b',
+                    'Solar images at six wavelengths with image exposures 10 msec or 1 sec.',
+                ),
+                ('2', 'Weighted average of level-1b product files of SUVI.'),
+            ],
+            attrs.Wavelength: [('*')],
+        }

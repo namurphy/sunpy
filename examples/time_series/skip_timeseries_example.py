@@ -9,6 +9,7 @@ This is intended primarily to demonstrate the current interface for discussion
 of the final implementation. Much of the code will be changes as the class is
 developed.
 """
+
 import datetime
 from collections import OrderedDict
 
@@ -173,7 +174,7 @@ ts_goes.to_array()
 # Input data can be in the form of a Pandas DataFrame (preferred), an astropy
 # Table or a Numpy Array.
 # To generate some data and the corresponding dates
-base = datetime.datetime.today()
+base = datetime.datetime.now()
 dates = Time(base) - TimeDelta(np.arange(24 * 60)*u.minute)
 intensity = np.sin(np.arange(0, 12 * np.pi, ((12 * np.pi) / (24 * 60))))
 # Create the data DataFrame, header MetaDict and units OrderedDict

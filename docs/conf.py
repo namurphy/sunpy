@@ -3,6 +3,7 @@ Configuration file for the Sphinx documentation builder.
 
 isort:skip_file
 """
+
 # flake8: NOQA: E402
 
 # -- stdlib imports ------------------------------------------------------------
@@ -28,11 +29,7 @@ if missing_requirements:
     )
     sys.exit(1)
 
-# -- Read the Docs Specific Configuration --------------------------------------
-
-# This needs to be done before sunpy is imported
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-if on_rtd:
+if on_rtd := os.environ.get('READTHEDOCS', None) == 'True':
     os.environ['SUNPY_CONFIGDIR'] = '/home/docs/'
     os.environ['HOME'] = '/home/docs/'
     os.environ['LANG'] = 'C'

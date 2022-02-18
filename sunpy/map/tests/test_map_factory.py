@@ -83,7 +83,7 @@ class TestMap:
         # Test that returned maps are sorted
         files_sorted = sorted(list(directory.glob('*')))
         maps_sorted = [sunpy.map.Map(os.fspath(f)) for f in files_sorted]
-        assert all([m.date == m_s.date for m, m_s in zip(maps, maps_sorted)])
+        assert all(m.date == m_s.date for m, m_s in zip(maps, maps_sorted))
 
         # Pathlib
         path = pathlib.Path(a_fname)
@@ -101,7 +101,7 @@ class TestMap:
         # Test that returned maps are sorted
         files_sorted = sorted(list(pathlib.Path(pattern).parent.glob('*')))
         maps_sorted = [sunpy.map.Map(os.fspath(f)) for f in files_sorted]
-        assert all([m.date == m_s.date for m, m_s in zip(maps, maps_sorted)])
+        assert all(m.date == m_s.date for m, m_s in zip(maps, maps_sorted))
         # Single character wildcard (?)
         pattern = os.path.join(filepath, "EIT", "efz20040301.0?0010_s.fits")
         maps = sunpy.map.Map(pattern)
@@ -186,7 +186,7 @@ class TestMap:
         p = tmpdir.mkdir("sub").join("hello.fits")
         p.write("content")
         files = [AIA_171_IMAGE, p.strpath]
-        with pytest.raises(OSError, match=(fr"Failed to read *")):
+        with pytest.raises(OSError, match='Failed to read *'):
             sunpy.map.Map(files)
 
     # We want to check errors, so ignore warnings that are thrown

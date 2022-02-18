@@ -112,7 +112,7 @@ class EventType(_attr.Attr):
 
     def __or__(self, other):
         if isinstance(other, EventType):
-            return EventType(self.item + ',' + other.item)
+            return EventType(f'{self.item},{other.item}')
         else:
             return super().__or__(other)
 

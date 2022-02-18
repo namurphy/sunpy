@@ -20,11 +20,10 @@ def test_skeleton():
     for key, val in toplevel_dims.items():
         if isinstance(val, tuple):
             assert TESTING[key].shape == tuple(reversed(val))
+        elif val > 1:
+            assert len(TESTING[key]) == val
         else:
-            if val > 1:
-                assert len(TESTING[key]) == val
-            else:
-                assert isinstance(TESTING[key], int)
+            assert isinstance(TESTING[key], int)
 
 
 def test_array_elements_values():

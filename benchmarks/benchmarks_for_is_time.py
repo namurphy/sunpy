@@ -13,5 +13,4 @@ class TimeSuite:
 
 class MemSuite:
     def mem_is_time(self):
-        t = is_time('1995-11-31 23:59:60')
-        return t
+        return is_time('1995-11-31 23:59:60')

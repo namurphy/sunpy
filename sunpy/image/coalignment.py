@@ -145,11 +145,8 @@ def _upper_clip(z):
     Find smallest integer bigger than all the positive entries in the input
     array.
     """
-    zupper = 0
     zcond = z >= 0
-    if np.any(zcond):
-        zupper = int(np.max(np.ceil(z[zcond])))
-    return zupper
+    return int(np.max(np.ceil(z[zcond]))) if np.any(zcond) else 0
 
 
 def _lower_clip(z):
@@ -157,11 +154,8 @@ def _lower_clip(z):
     Find smallest positive integer bigger than the absolute values of the
     negative entries in the input array.
     """
-    zlower = 0
     zcond = z <= 0
-    if np.any(zcond):
-        zlower = int(np.max(np.ceil(-z[zcond])))
-    return zlower
+    return int(np.max(np.ceil(-z[zcond]))) if np.any(zcond) else 0
 
 
 def match_template_to_layer(layer, template):

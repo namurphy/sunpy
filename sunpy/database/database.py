@@ -611,7 +611,7 @@ class Database:
         # If any of the DatabaseEntry-s lack the sorting attribute, the
         # sorting key should fall back to 'id', orherwise it fails with
         # TypeError on py3
-        if any([getattr(entry, sortby) is None for entry in db_entries]):
+        if any(getattr(entry, sortby) is None for entry in db_entries):
             sortby = 'id'
 
         return sorted(db_entries, key=operator.attrgetter(sortby))
@@ -834,10 +834,7 @@ class Database:
             H2VClient().translate_and_query(query_result,
                                             vso_response_format="legacy"))
 
-        vso_qr = []
-
-        for query in iterator:
-            vso_qr.append(query)
+        vso_qr = list(iterator)
 
         self.download_from_vso_query_result(vso_qr, client, path,
                                             progress, ignore_already_added,

@@ -44,7 +44,7 @@ def solar_wcs_frame_mapping(wcs):
     observer = None
     for frame, attr_names in required_attrs.items():
         attrs = [getattr(wcs.wcs.aux, attr_name) for attr_name in attr_names]
-        if all([attr is not None for attr in attrs]):
+        if all(attr is not None for attr in attrs):
             kwargs = {'obstime': dateobs}
             if issubclass(frame, HeliographicCarrington):
                 kwargs['observer'] = 'self'
@@ -146,30 +146,28 @@ def solar_frame_to_wcs_mapping(frame, projection='TAN'):
     if hasattr(frame, 'observer') and isinstance(frame.observer, BaseCoordinateFrame):
         _set_wcs_aux_obs_coord(wcs, frame.observer)
 
-    if isinstance(frame, SunPyBaseCoordinateFrame):
-
-        if frame.obstime:
-            wcs.wcs.dateobs = frame.obstime.utc.isot
-
-        if isinstance(frame, Helioprojective):
-            xcoord = 'HPLN' + '-' + projection
-            ycoord = 'HPLT' + '-' + projection
-            wcs.wcs.cunit = ['arcsec', 'arcsec']
-        elif isinstance(frame, Heliocentric):
-            xcoord = 'SOLX'
-            ycoord = 'SOLY'
-            wcs.wcs.cunit = ['deg', 'deg']
-        elif isinstance(frame, HeliographicCarrington):
-            xcoord = 'CRLN' + '-' + projection
-            ycoord = 'CRLT' + '-' + projection
-            wcs.wcs.cunit = ['deg', 'deg']
-        elif isinstance(frame, HeliographicStonyhurst):
-            xcoord = 'HGLN' + '-' + projection
-            ycoord = 'HGLT' + '-' + projection
-            wcs.wcs.cunit = ['deg', 'deg']
-
-    else:
+    if not isinstance(frame, SunPyBaseCoordinateFrame):
         return None
+
+    if frame.obstime:
+        wcs.wcs.dateobs = frame.obstime.utc.isot
+
+    if isinstance(frame, Helioprojective):
+        xcoord = 'HPLN' + '-' + projection
+        ycoord = 'HPLT' + '-' + projection
+        wcs.wcs.cunit = ['arcsec', 'arcsec']
+    elif isinstance(frame, Heliocentric):
+        xcoord = 'SOLX'
+        ycoord = 'SOLY'
+        wcs.wcs.cunit = ['deg', 'deg']
+    elif isinstance(frame, HeliographicCarrington):
+        xcoord = 'CRLN' + '-' + projection
+        ycoord = 'CRLT' + '-' + projection
+        wcs.wcs.cunit = ['deg', 'deg']
+    elif isinstance(frame, HeliographicStonyhurst):
+        xcoord = 'HGLN' + '-' + projection
+        ycoord = 'HGLT' + '-' + projection
+        wcs.wcs.cunit = ['deg', 'deg']
 
     wcs.wcs.ctype = [xcoord, ycoord]
 

@@ -135,9 +135,7 @@ def get_body_heliographic_stonyhurst(body, time='now', observer=None, *, include
     else:
         body_icrs = get_body_barycentric(body, emitted_time)
 
-    body_hgs = ICRS(body_icrs).transform_to(HeliographicStonyhurst(obstime=obstime))
-
-    return body_hgs
+    return ICRS(body_icrs).transform_to(HeliographicStonyhurst(obstime=obstime))
 
 
 @add_common_docstring(**_variables_for_parse_time_docstring())

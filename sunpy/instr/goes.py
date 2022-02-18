@@ -279,9 +279,7 @@ def calculate_temperature_em(goests, abundances="coronal",
 
 
 @u.quantity_input
-def _goes_chianti_tem(longflux: u.W/u.m/u.m, shortflux: u.W/u.m/u.m, satellite=8,
-                      date=datetime.datetime.today(), abundances="coronal",
-                      download=False, download_dir=None):
+def _goes_chianti_tem(longflux: u.W/u.m/u.m, shortflux: u.W/u.m/u.m, satellite=8, date = datetime.datetime.now(), abundances="coronal", download=False, download_dir=None):
     """
     Calculates temperature and emission measure from GOES/XRS data.
 
@@ -983,38 +981,34 @@ def _calc_rad_loss(temp: u.MK, em: u.cm**-3, obstime=None, force_download=False,
     rad_loss = u.Quantity(rad_loss, unit='erg/s')
     rad_loss = rad_loss.to(u.J/u.s)
 
-    # If obstime keyword giving measurement times is set, calculate
-    # radiative losses integrated over time.
-    if obstime is not None:
-        # First ensure obstime is of same length as temp and em and of
-        # correct type.
-        n = len(temp)
-        if len(obstime) != n:
-            raise OSError("obstime must have same number of elements as "
-                          "temp and em.")
+    if obstime is None:
+        return {"rad_loss_rate": rad_loss}
 
-        obstime = parse_time(obstime)
+    # First ensure obstime is of same length as temp and em and of
+    # correct type.
+    n = len(temp)
+    if len(obstime) != n:
+        raise OSError("obstime must have same number of elements as "
+                      "temp and em.")
 
-        # Check elements in obstime in chronological order
-        _assert_chrono_order(obstime)
-        # Next, get measurement times in seconds from time of first
-        # measurement.
-        obstime_seconds = (obstime - obstime[0]).sec
-        # Finally, integrate using trapezoid rule
-        rad_loss_int = trapz(rad_loss.value, obstime_seconds)
-        rad_loss_int = u.Quantity(rad_loss_int, unit=rad_loss.unit*u.s)
-        # Calculate cumulative radiated energy in each GOES channel as
-        # a function of time.
-        rad_loss_cumul = cumtrapz(rad_loss, obstime_seconds)
-        rad_loss_cumul = u.Quantity(rad_loss_cumul, unit=rad_loss.unit*u.s)
+    obstime = parse_time(obstime)
+
+    # Check elements in obstime in chronological order
+    _assert_chrono_order(obstime)
+    # Next, get measurement times in seconds from time of first
+    # measurement.
+    obstime_seconds = (obstime - obstime[0]).sec
+    # Finally, integrate using trapezoid rule
+    rad_loss_int = trapz(rad_loss.value, obstime_seconds)
+    rad_loss_int = u.Quantity(rad_loss_int, unit=rad_loss.unit*u.s)
+    # Calculate cumulative radiated energy in each GOES channel as
+    # a function of time.
+    rad_loss_cumul = cumtrapz(rad_loss, obstime_seconds)
+    rad_loss_cumul = u.Quantity(rad_loss_cumul, unit=rad_loss.unit*u.s)
         # Enter results into output dictionary.
-        rad_loss_out = {"rad_loss_rate": rad_loss,
+    return {"rad_loss_rate": rad_loss,
                         "rad_loss_cumul": rad_loss_cumul,
                         "rad_loss_int": rad_loss_int}
-    else:
-        rad_loss_out = {"rad_loss_rate": rad_loss}
-
-    return rad_loss_out
 
 
 def calculate_xray_luminosity(goests):
@@ -1208,14 +1202,12 @@ def _goes_lx(longflux, shortflux, obstime=None, date=None):
         shortlum_cumul = cumtrapz(shortlum.value, obstime_seconds)
         shortlum_cumul = u.Quantity(shortlum_cumul,
                                     unit=shortlum.unit*u.s)
-        lx_out = {"longlum": longlum, "shortlum": shortlum,
+        return {"longlum": longlum, "shortlum": shortlum,
                   "longlum_cumul": longlum_cumul,
                   "shortlum_cumul": shortlum_cumul,
                   "longlum_int": longlum_int, "shortlum_int": shortlum_int}
     else:
-        lx_out = {"longlum": longlum, "shortlum": shortlum}
-
-    return lx_out
+        return {"longlum": longlum, "shortlum": shortlum}
 
 
 @u.quantity_input
@@ -1253,12 +1245,10 @@ def _calc_xraylum(flux: u.W/u.m/u.m, date=None):
     >>> xraylum  # doctest: +REMOTE_DATA
     <Quantity [1.98751663e+18, 1.98751663e+18] W>
     """
-    if date is not None:
-        date = parse_time(date)
-        xraylum = 4 * np.pi * sun.earth_distance(date).to("m")**2 * flux
-    else:
-        xraylum = 4 * np.pi * constants.au.to("m")**2 * flux
-    return xraylum
+    if date is None:
+        return 4 * np.pi * constants.au.to("m")**2 * flux
+    date = parse_time(date)
+    return 4 * np.pi * sun.earth_distance(date).to("m")**2 * flux
 
 
 def flareclass_to_flux(flareclass):
@@ -1361,5 +1351,5 @@ def flux_to_flareclass(goesflux: u.watt/u.m**2):
 
 def _assert_chrono_order(obstime):
     chrono_check = obstime[1:] - obstime[:-1]
-    if not all(val > TimeDelta(0*u.day) for val in chrono_check):
+    if any(val <= TimeDelta(0 * u.day) for val in chrono_check):
         raise ValueError("Elements of obstime must be in chronological order.")

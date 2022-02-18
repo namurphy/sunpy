@@ -12,9 +12,11 @@ _REGEX = re.compile(r"Client")
 CLIENT_LIST = []
 
 for a_import in [vso, jsoc, dataretriever]:
-    for item in dir(a_import):
-        if _REGEX.search(item):
-            CLIENT_LIST.append(getattr(a_import, item))
+    CLIENT_LIST.extend(
+        getattr(a_import, item)
+        for item in dir(a_import)
+        if _REGEX.search(item)
+    )
 
 CLIENT_LIST.remove(dataretriever.client.GenericClient)
 

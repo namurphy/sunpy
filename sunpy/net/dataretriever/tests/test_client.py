@@ -3,8 +3,7 @@ from sunpy.time import parse_time
 
 
 def test_reprs():
-    rowdict = {}
-    rowdict['Start Time'] = parse_time("2012/1/1")
+    rowdict = {'Start Time': parse_time("2012/1/1")}
     rowdict['End Time'] = parse_time("2012/1/2")
     resp = QueryResponse([rowdict])
     assert isinstance(resp, QueryResponse)

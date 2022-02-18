@@ -186,9 +186,8 @@ class H2VClient:
             temp = self.vso_client.search(*query, response_format=vso_response_format)
             self.vso_results.append(temp)
             self.num_of_records += len(temp)
-            if limit is not None:
-                if self.num_of_records >= limit:
-                    break
+            if limit is not None and self.num_of_records >= limit:
+                break
 
         return self.vso_results
 

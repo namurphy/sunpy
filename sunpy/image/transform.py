@@ -87,11 +87,7 @@ def affine_transform(image, rmatrix, order=3, scale=1.0, image_center=None,
         image_center = array_center
 
     # Determine center of rotation based on use (or not) of the recenter keyword
-    if recenter:
-        rot_center = array_center
-    else:
-        rot_center = image_center
-
+    rot_center = array_center if recenter else image_center
     displacement = np.dot(rmatrix, rot_center)
     shift = image_center - displacement
     if not use_scipy:

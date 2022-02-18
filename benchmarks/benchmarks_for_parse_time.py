@@ -13,8 +13,7 @@ class TimeSuite:
 
 class MemSuite:
     def mem_parse_time(self):
-        t = parse_time('1995-12-31 23:59:60')
-        return t
+        return parse_time('1995-12-31 23:59:60')
 
 
 class PeakMemorySuite:

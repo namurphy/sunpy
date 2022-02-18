@@ -484,9 +484,7 @@ def hpc_to_hpc(from_coo, to_frame):
     _check_observer_defined(to_frame)
 
     hgs = from_coo.transform_to(HeliographicStonyhurst(obstime=to_frame.obstime))
-    hpc = hgs.transform_to(to_frame)
-
-    return hpc
+    return hgs.transform_to(to_frame)
 
 
 def _rotation_matrix_reprs_to_reprs(start_representation, end_representation):
@@ -501,13 +499,13 @@ def _rotation_matrix_reprs_to_reprs(start_representation, end_representation):
 
     if rotation_angle.isscalar:
         # This line works around some input/output quirks of Astropy's rotation_matrix()
-        matrix = np.array(rotation_matrix(rotation_angle, rotation_axis.xyz.value.tolist()))
-    else:
-        matrix_list = [np.array(rotation_matrix(angle, axis.xyz.value.tolist()))
-                       for angle, axis in zip(rotation_angle, rotation_axis)]
-        matrix = np.stack(matrix_list)
+        return np.array(
+            rotation_matrix(rotation_angle, rotation_axis.xyz.value.tolist())
+        )
 
-    return matrix
+    matrix_list = [np.array(rotation_matrix(angle, axis.xyz.value.tolist()))
+                   for angle, axis in zip(rotation_angle, rotation_axis)]
+    return np.stack(matrix_list)
 
 
 def _rotation_matrix_reprs_to_xz_about_z(representations):
@@ -523,9 +521,7 @@ def _rotation_matrix_reprs_to_xz_about_z(representations):
 
     # Rotate the resulting vector to the X axis
     x_axis = CartesianRepresentation(1, 0, 0)
-    matrix = _rotation_matrix_reprs_to_reprs(A_no_z, x_axis)
-
-    return matrix
+    return _rotation_matrix_reprs_to_reprs(A_no_z, x_axis)
 
 
 def _sun_earth_icrf(time):
@@ -830,9 +826,8 @@ def gse_to_gse(from_coo, to_frame):
     """
     if _times_are_equal(from_coo.obstime, to_frame.obstime):
         return to_frame.realize_frame(from_coo.data)
-    else:
-        heecoord = from_coo.transform_to(HeliocentricEarthEcliptic(obstime=from_coo.obstime))
-        return heecoord.transform_to(to_frame)
+    heecoord = from_coo.transform_to(HeliocentricEarthEcliptic(obstime=from_coo.obstime))
+    return heecoord.transform_to(to_frame)
 
 
 def _rotation_matrix_hgs_to_hci(obstime):
@@ -1074,7 +1069,7 @@ def _tweak_graph(docstr):
                     'HeliocentricEarthEcliptic', 'GeocentricSolarEcliptic',
                     'HeliocentricInertial', 'GeocentricEarthEquatorial']
     for frame in sunpy_frames:
-        output = output.replace(frame + ' [', frame + ' [fillcolor=white ')
+        output = output.replace(f'{frame} [', f'{frame} [fillcolor=white ')
 
     # Set the rank direction to be left->right (as opposed to top->bottom)
     # Force nodes for ICRS, HCRS, and "Other frames in Astropy" to be at the same rank
@@ -1092,13 +1087,16 @@ def _tweak_graph(docstr):
 
 
 def _add_legend_row(label, color):
-    row = '        <li style="list-style: none;">\n'\
-          '            <p style="font-size: 12px;line-height: 24px;font-weight: normal;'\
-          'color: #848484;padding: 0;margin: 0;">\n'\
-          '                <b>' + label + ':</b>\n'\
-          '                    <span class="dot" style="height: 20px;width: 40px;'\
-          'background-color: ' + color + ';border-radius: 50%;border: 1px solid black;'\
-          'display: inline-block;"></span>\n'\
-          '            </p>\n'\
-          '        </li>\n\n\n'
-    return row
+    return (
+        '        <li style="list-style: none;">\n'
+        '            <p style="font-size: 12px;line-height: 24px;font-weight: normal;'
+        'color: #848484;padding: 0;margin: 0;">\n'
+        '                <b>' + label + ':</b>\n'
+        '                    <span class="dot" style="height: 20px;width: 40px;'
+        'background-color: '
+        + color
+        + ';border-radius: 50%;border: 1px solid black;'
+        'display: inline-block;"></span>\n'
+        '            </p>\n'
+        '        </li>\n\n\n'
+    )

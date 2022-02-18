@@ -142,9 +142,12 @@ def pytest_runtest_setup(item):
     pytest hook to skip all tests that have the mark 'remotedata' if the
     pytest_remotedata plugin is not installed.
     """
-    if isinstance(item, pytest.Function):
-        if 'remote_data' in item.keywords and not HAVE_REMOTEDATA:
-            pytest.skip("skipping remotedata tests as pytest-remotedata is not installed")
+    if (
+        isinstance(item, pytest.Function)
+        and 'remote_data' in item.keywords
+        and not HAVE_REMOTEDATA
+    ):
+        pytest.skip("skipping remotedata tests as pytest-remotedata is not installed")
 
     # Confirm that the pyplot figure stack is empty before the test
     if HAVE_MATPLOTLIB and plt.get_fignums():

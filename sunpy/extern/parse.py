@@ -651,7 +651,7 @@ def date_convert(
     groups = match.groups()
     time_only = False
     if mm and dd:
-        y = datetime.today().year
+        y = datetime.now().year
         m = groups[mm]
         d = groups[dd]
     elif ymd is not None:
@@ -677,7 +677,7 @@ def date_convert(
             H, M, S = t
             if '.' in S:
                 S, u = S.split('.')
-                u = int(float('.' + u) * 1000000)
+                u = int(float(f'.{u}') * 1000000)
             S = int(S)
         H = int(H)
         M = int(M)
@@ -701,10 +701,7 @@ def date_convert(
         tz = FixedTzOffset(0, 'UTC')
     elif tz:
         tz = tz.strip()
-        if tz.isupper():
-            # TODO use the awesome python TZ module?
-            pass
-        else:
+        if not tz.isupper():
             sign = tz[0]
             if ':' in tz:
                 tzh, tzm = tz[1:].split(':')
@@ -721,10 +718,7 @@ def date_convert(
         d = time(H, M, S, u, tzinfo=tz)
     else:
         y = int(y)
-        if m.isdigit():
-            m = int(m)
-        else:
-            m = MONTHS_MAP[m]
+        m = int(m) if m.isdigit() else MONTHS_MAP[m]
         d = int(d)
         d = datetime(y, m, d, H, M, S, u, tzinfo=tz)
 
@@ -744,7 +738,7 @@ class RepeatedNameError(ValueError):
 REGEX_SAFETY = re.compile(r'([?\\\\.[\]()*+\^$!\|])')
 
 # allowed field types
-ALLOWED_TYPES = set(list('nbox%fFegwWdDsSl') + ['t' + c for c in 'ieahgcts'])
+ALLOWED_TYPES = set(list('nbox%fFegwWdDsSl') + [f't{c}' for c in 'ieahgcts'])
 
 
 def extract_format(format, extra_types):
@@ -812,10 +806,7 @@ class Parser(object):
         if extra_types is None:
             extra_types = {}
         self._extra_types = extra_types
-        if case_sensitive:
-            self._re_flags = re.DOTALL
-        else:
-            self._re_flags = re.IGNORECASE | re.DOTALL
+        self._re_flags = re.DOTALL if case_sensitive else re.IGNORECASE | re.DOTALL
         self._fixed_fields = []
         self._named_fields = []
         self._group_index = 0
@@ -882,10 +873,7 @@ class Parser(object):
         if m is None:
             return None
 
-        if evaluate_result:
-            return self.evaluate_result(m)
-        else:
-            return Match(self, m)
+        return self.evaluate_result(m) if evaluate_result else Match(self, m)
 
     def search(self, string, pos=0, endpos=None, evaluate_result=True):
         """Search the string for my format.
@@ -905,10 +893,7 @@ class Parser(object):
         if m is None:
             return None
 
-        if evaluate_result:
-            return self.evaluate_result(m)
-        else:
-            return Match(self, m)
+        return self.evaluate_result(m) if evaluate_result else Match(self, m)
 
     def findall(
         self, string, pos=0, endpos=None, extra_types=None, evaluate_result=True
@@ -972,14 +957,14 @@ class Parser(object):
             named_fields[korig] = value
 
         # now figure the match spans
-        spans = dict((n, m.span(name_map[n])) for n in named_fields)
+        spans = {n: m.span(name_map[n]) for n in named_fields}
         spans.update((i, m.span(n + 1)) for i, n in enumerate(self._fixed_fields))
 
         # and that's our result
         return Result(fixed_fields, self._expand_named_fields(named_fields), spans)
 
     def _regex_replace(self, match):
-        return '\\' + match.group(1)
+        return f'\\{match.group(1)}'
 
     def _generate_expression(self):
         # turn my _format attribute into the _expression attribute
@@ -1108,10 +1093,7 @@ class Parser(object):
             self._group_index += 2
             self._type_conversions[group] = convert_first(float)
         elif type == 'd':
-            if format.get('width'):
-                width = r'{1,%s}' % int(format['width'])
-            else:
-                width = '+'
+            width = r'{1,%s}' % int(format['width']) if format.get('width') else '+'
             s = r'\d{w}|[-+ ]?0[xX][0-9a-fA-F]{w}|[-+ ]?0[bB][01]{w}|[-+ ]?0[oO][0-7]{w}'.format(
                 w=width
             )
@@ -1223,7 +1205,7 @@ class Parser(object):
                 s = r'%s*' % fill + s
 
             # allow numbers to be prefixed with a sign
-            s = r'[-+ ]?' + s
+            s = f'[-+ ]?{s}'
 
         if not fill:
             fill = ' '
@@ -1234,16 +1216,11 @@ class Parser(object):
             s = wrap % s
             self._group_index += 1
 
-        if format['width']:
-            # all we really care about is that if the format originally
-            # specified a width then there will probably be padding - without
-            # an explicit alignment that'll mean right alignment with spaces
-            # padding
-            if not align:
-                align = '>'
+        if format['width'] and not align:
+            align = '>'
 
         if fill in r'.\+?*[](){}^$':
-            fill = '\\' + fill
+            fill = f'\\{fill}'
 
         # align "=" has been handled
         if align == '<':
@@ -1272,9 +1249,7 @@ class Result(object):
         self.spans = spans
 
     def __getitem__(self, item):
-        if isinstance(item, int):
-            return self.fixed[item]
-        return self.named[item]
+        return self.fixed[item] if isinstance(item, int) else self.named[item]
 
     def __repr__(self):
         return '<%s %r %r>' % (self.__class__.__name__, self.fixed, self.named)

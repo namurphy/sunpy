@@ -818,7 +818,10 @@ def test_rotate_invalid_order(generic_map):
 def test_as_mpl_axes_aia171(aia171_test_map):
     ax = plt.subplot(projection=aia171_test_map)
     assert isinstance(ax, wcsaxes.WCSAxes)
-    assert all([ct1 == ct2 for ct1, ct2 in zip(ax.wcs.wcs.ctype, aia171_test_map.wcs.wcs.ctype)])
+    assert all(
+        ct1 == ct2
+        for ct1, ct2 in zip(ax.wcs.wcs.ctype, aia171_test_map.wcs.wcs.ctype)
+    )
 
 
 def test_validate_meta(generic_map):
@@ -930,11 +933,13 @@ def test_more_than_two_dimensions():
 def test_missing_metadata_warnings():
     # Checks that warnings for missing metadata are only raised once
     with pytest.warns(Warning) as record:
-        header = {}
-        header['cunit1'] = 'arcsec'
-        header['cunit2'] = 'arcsec'
-        header['ctype1'] = 'HPLN-TAN'
-        header['ctype2'] = 'HPLT-TAN'
+        header = {
+            'cunit1': 'arcsec',
+            'cunit2': 'arcsec',
+            'ctype1': 'HPLN-TAN',
+            'ctype2': 'HPLT-TAN',
+        }
+
         array_map = sunpy.map.Map(np.random.rand(20, 15), header)
         array_map.peek()
     # There should be 2 warnings for missing metadata (obstime and observer location)

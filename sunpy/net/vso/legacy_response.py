@@ -37,8 +37,7 @@ class QueryResponse(BaseQueryResponse):
         return len(self._data)
 
     def __iter__(self):
-        for block in self._data:
-            yield block
+        yield from self._data
 
     @property
     def blocks(self):
@@ -139,7 +138,7 @@ class QueryResponse(BaseQueryResponse):
         """
         s = {a if not a.startswith('_') else None for a in dir(self[0])}
         for resp in self[1:]:
-            if len(s) == 0:
+            if not s:
                 break
             s = s.intersection({a if not a.startswith('_') else None for a in dir(resp)})
 

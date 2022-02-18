@@ -127,7 +127,7 @@ class SOTMap(GenericMap):
                  'SOT/SP': 'intensity',  # For the 1st 2 dimensions
                  }
 
-        self.plot_settings['cmap'] = 'hinodesot' + color[self.instrument]
+        self.plot_settings['cmap'] = f'hinodesot{color[self.instrument]}'
 
     @classmethod
     def is_datasource_for(cls, data, header, **kwargs):

@@ -127,7 +127,9 @@ def test_client_repr(LCClient):
     Repr check
     """
     output = str(LCClient)
-    assert output[:50] == 'sunpy.net.dataretriever.sources.eve.EVEClient\n\nPro'
+    assert output.startswith(
+        'sunpy.net.dataretriever.sources.eve.EVEClient\n\nPro'
+    )
 
 
 def mock_query_object(LCClient):
@@ -148,8 +150,7 @@ def mock_query_object(LCClient):
         'url': ('http://lasp.colorado.edu/eve/data_access/evewebdata/'
                 'quicklook/L0CS/SpWx/2016/20160101_EVE_L0CS_DIODES_1m.txt')
     }
-    results = QueryResponse([obj], client=LCClient)
-    return results
+    return QueryResponse([obj], client=LCClient)
 
 
 def test_show(LCClient):

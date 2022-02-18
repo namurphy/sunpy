@@ -192,30 +192,30 @@ def test_lookup_records_errors(client):
     with pytest.raises(ValueError):          # Series must be specified for a JSOC Query
         client._lookup_records(d1)
 
-    d1.update({'series': 'aia.lev1_euv_12s'})
-    d1.update({'keys': 123})
+    d1['series'] = 'aia.lev1_euv_12s'
+    d1['keys'] = 123
     # Keywords can only be passed as a list or comma-separated strings.
     with pytest.raises(TypeError):
         client._lookup_records(d1)
 
     d1['keys'] = 'T_OBS'
-    d1.update({'primekey': {'foo': 'bar'}})
+    d1['primekey'] = {'foo': 'bar'}
     with pytest.raises(ValueError):          # Unexpected PrimeKeys were passed.
         client._lookup_records(d1)
 
     del d1['primekey']
-    d1.update({'segment': 123})
-    d1.update({'wavelength': 304*u.AA})
+    d1['segment'] = 123
+    d1['wavelength'] = 304*u.AA
     # Segments can only be passed as a comma-separated string or a list of strings.
     with pytest.raises(TypeError):
         client._lookup_records(d1)
 
-    d1.update({'segment': 'foo'})
+    d1['segment'] = 'foo'
     with pytest.raises(ValueError):          # Unexpected Segments were passed.
         client._lookup_records(d1)
 
     del d1['segment']
-    d1.update({'series': 'hmi.m_45s'})
+    d1['series'] = 'hmi.m_45s'
     # The series does not support wavelength attribute.
     with pytest.raises(TypeError):
         client._lookup_records(d1)
@@ -256,12 +256,12 @@ def test_make_recordset(client):
     exp = 'aia.lev1_euv_12s[2020.01.01_00:00:35_TAI-2020.01.01_01:00:35_TAI]'
     assert client._make_recordset(**d1) == exp
 
-    d1.update({'wavelength': 604*u.AA})
+    d1['wavelength'] = 604*u.AA
     exp = 'aia.lev1_euv_12s[2020.01.01_00:00:35_TAI-2020.01.01_01:00:35_TAI][604]'
     assert client._make_recordset(**d1) == exp
 
     del d1['wavelength']
-    d1.update({'primekey': {'WAVELNTH': '604'}})
+    d1['primekey'] = {'WAVELNTH': '604'}
     assert client._make_recordset(**d1) == exp
 
     del d1['start_time'], d1['end_time']
@@ -290,7 +290,7 @@ def test_make_recordset(client):
           '{continuum,magnetogram}'
     assert client._make_recordset(**d1) == exp
 
-    d1.update({'sample': 300.0})
+    d1['sample'] = 300.0
     exp = 'hmi.sharp_720s[][2020.01.01_00:00:35_TAI-2020.01.01_01:00:35_TAI@300.0s]'\
           '{continuum,magnetogram}'
     assert client._make_recordset(**d1) == exp

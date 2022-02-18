@@ -484,7 +484,7 @@ class JSOCClient(BaseClient):
             responses = [responses]
 
         # Add them to the response for good measure
-        jsoc_response.requests = [r for r in responses]
+        jsoc_response.requests = list(responses)
         time.sleep(sleep/2.)
 
         for response in responses:
@@ -549,7 +549,7 @@ class JSOCClient(BaseClient):
                 requests[i] = r
 
         # We only download if all are finished
-        if not all([r.has_succeeded() for r in requests]):
+        if not all(r.has_succeeded() for r in requests):
             raise NotExportedError("Can not download as not all the requests "
                                    "have been exported for download yet.")
 
@@ -572,10 +572,7 @@ class JSOCClient(BaseClient):
                 for filename in request.data['filename']:
                     # Ensure we don't duplicate the file extension
                     ext = os.path.splitext(filename)[1]
-                    if path.endswith(ext):
-                        fname = path.strip(ext)
-                    else:
-                        fname = path
+                    fname = path.strip(ext) if path.endswith(ext) else path
                     fname = fname.format(file=filename)
                     fname = os.path.expanduser(fname)
                     paths.append(fname)
@@ -599,7 +596,7 @@ class JSOCClient(BaseClient):
                     urls.extend(list(request.urls.url))
                 else:
                     for index, data in request.data.iterrows():
-                        url_dir = request.request_url + '/'
+                        url_dir = f'{request.request_url}/'
                         urls.append(urllib.parse.urljoin(url_dir, data['filename']))
 
         if urls:
@@ -612,8 +609,7 @@ class JSOCClient(BaseClient):
         if dl_set and not wait:
             return Results()
 
-        results = downloader.download()
-        return results
+        return downloader.download()
 
     def _make_recordset(self, series, start_time='', end_time='', wavelength='',
                         segment='', primekey={}, **kwargs):
@@ -693,7 +689,7 @@ class JSOCClient(BaseClient):
             # Check whether any primekey listed in PKEY_LIST_TIME has been passed through
             # PrimeKey() attribute. If yes, raise an error, since Time can only be passed
             # either through PrimeKey() attribute or Time() attribute.
-            if not any(x in PKEY_LIST_TIME for x in primekey):
+            if all(x not in PKEY_LIST_TIME for x in primekey):
                 timestr = '{start}-{end}{sample}'.format(
                     start=start_time.tai.strftime("%Y.%m.%d_%H:%M:%S_TAI"),
                     end=end_time.tai.strftime("%Y.%m.%d_%H:%M:%S_TAI"),
@@ -716,30 +712,25 @@ class JSOCClient(BaseClient):
                                 "use only one of the primekey to query for series data."
                 raise ValueError(error_message)
 
-            if match:
-                timestr = '{}'.format(primekey.pop(list(match)[0], ''))
-            else:
-                timestr = ''
-
-        if wavelength != '':
-            if not primekey.get('WAVELNTH', ''):
-                if isinstance(wavelength, list):
-                    wavelength = [int(np.ceil(wave.to(u.AA).value)) for wave in wavelength]
-                    wavelength = str(wavelength)
-                else:
-                    wavelength = '{}'.format(int(np.ceil(wavelength.to(u.AA).value)))
-
-            else:
-                # This is executed when wavelength has been passed both through PrimeKey()
-                # and Wavelength().
-                error_message = "Wavelength attribute has been passed both as a Wavelength()"\
-                                " and PrimeKey(). Please provide any one of them"\
-                                " or separate them by OR operator."
-                raise ValueError(error_message)
-
-        else:
+            timestr = '{}'.format(primekey.pop(list(match)[0], '')) if match else ''
+        if wavelength == '':
             # This is executed when wavelength has been passed through PrimeKey().
             wavelength = '{}'.format(primekey.pop('WAVELNTH', ''))
+
+        elif not primekey.get('WAVELNTH', ''):
+            if isinstance(wavelength, list):
+                wavelength = [int(np.ceil(wave.to(u.AA).value)) for wave in wavelength]
+                wavelength = str(wavelength)
+            else:
+                wavelength = '{}'.format(int(np.ceil(wavelength.to(u.AA).value)))
+
+        else:
+            # This is executed when wavelength has been passed both through PrimeKey()
+            # and Wavelength().
+            error_message = "Wavelength attribute has been passed both as a Wavelength()"\
+                            " and PrimeKey(). Please provide any one of them"\
+                            " or separate them by OR operator."
+            raise ValueError(error_message)
 
         # Populate primekey dict with formatted Time and Wavlength.
         if timestr:
@@ -753,17 +744,12 @@ class JSOCClient(BaseClient):
         si = c.info(series)
         pkeys_isTime = si.keywords.loc[si.primekeys].is_time
         for pkey in pkeys_isTime.index.values:
-            # The loop is iterating over the list of prime-keys existing for the given series.
-            if len(primekey) > 0:
-                if pkeys_isTime[pkey]:
-                    pkstr += '[{}]'.format(primekey.pop('TIME', ''))
-                else:
-                    pkstr += '[{}]'.format(primekey.pop(pkey, ''))
-            else:
+            if len(primekey) <= 0:
                 break
-                # break because we can skip adding {} at the end of pkstr, if the primekey
-                # dict is empty.
-
+            if pkeys_isTime[pkey]:
+                pkstr += '[{}]'.format(primekey.pop('TIME', ''))
+            else:
+                pkstr += '[{}]'.format(primekey.pop(pkey, ''))
         if not pkstr:
             # pkstr cannot be totally empty
             #
@@ -772,11 +758,9 @@ class JSOCClient(BaseClient):
             # searches that would make JSOC sad
             raise ValueError("Time, Wavelength or an explicit PrimeKey must be specified.")
 
-        dataset = '{series}{primekey}{segment}'.format(series=series,
+        return '{series}{primekey}{segment}'.format(series=series,
                                                        primekey=pkstr,
                                                        segment=segment)
-
-        return dataset
 
     def _lookup_records(self, iargs):
         """
@@ -786,10 +770,7 @@ class JSOCClient(BaseClient):
         isMeta = iargs.get('meta', False)
         c = drms.Client()
 
-        if isMeta:
-            keywords = '**ALL**'
-        else:
-            keywords = iargs.get('keys', '**ALL**')
+        keywords = '**ALL**' if isMeta else iargs.get('keys', '**ALL**')
         # TODO: keywords should be set only to '**ALL**' post 3.0
         # All checks done above should be removed.
 
@@ -807,19 +788,19 @@ class JSOCClient(BaseClient):
         # whether the passed PrimeKeys is a subset of that.
         pkeys = c.pkeys(iargs['series'])
         pkeys_passed = iargs.get('primekey', None)  # pkeys_passes is a dict, with key-value pairs.
-        if pkeys_passed is not None:
-            if not set(list(pkeys_passed.keys())) <= set(pkeys):
-                error_message = "Unexpected PrimeKeys were passed. The series {series} "\
-                                "supports the following PrimeKeys {pkeys}"
-                raise ValueError(error_message.format(series=iargs['series'], pkeys=pkeys))
+        if pkeys_passed is not None and not set(list(pkeys_passed.keys())) <= set(
+            pkeys
+        ):
+            error_message = "Unexpected PrimeKeys were passed. The series {series} "\
+                            "supports the following PrimeKeys {pkeys}"
+            raise ValueError(error_message.format(series=iargs['series'], pkeys=pkeys))
 
         # Raise errors for wavelength
         wavelength = iargs.get('wavelength', '')
-        if wavelength != '':
-            if 'WAVELNTH' not in pkeys:
-                error_message = "The series {series} does not support wavelength attribute."\
-                                "The following primekeys are supported {pkeys}"
-                raise TypeError(error_message.format(series=iargs['series'], pkeys=pkeys))
+        if wavelength != '' and 'WAVELNTH' not in pkeys:
+            error_message = "The series {series} does not support wavelength attribute."\
+                            "The following primekeys are supported {pkeys}"
+            raise TypeError(error_message.format(series=iargs['series'], pkeys=pkeys))
 
         # Raise errors for segments
         # Get a set of the segments that exist for the given series, and check
@@ -911,14 +892,11 @@ class JSOCClient(BaseClient):
                 data = c.info(item)
                 series_store.append((data.name, data.note))
                 if not data.segments.empty:
-                    for row in data.segments.iterrows():
-                        segments.append((row[0], row[1][-1]))
+                    segments.extend((row[0], row[1][-1]) for row in data.segments.iterrows())
         series_store = list(set(series_store))
         segments = list(set(segments))
         with open(os.path.join(here, 'data', 'attrs.json'), 'w') as attrs_file:
-            keyword_info = {}
-            keyword_info["series_store"] = series_store
-            keyword_info["segments"] = segments
+            keyword_info = {'series_store': series_store, 'segments': segments}
             json.dump(keyword_info, attrs_file, indent=2)
 
     @staticmethod
@@ -940,6 +918,4 @@ class JSOCClient(BaseClient):
         # Create attrs out of them.
         series_dict = {a.jsoc.Series: keyword_info["series_store"]}
         segments_dict = {a.jsoc.Segment: keyword_info["segments"]}
-        attrs = {**series_dict, **segments_dict}
-
-        return attrs
+        return {**series_dict, **segments_dict}

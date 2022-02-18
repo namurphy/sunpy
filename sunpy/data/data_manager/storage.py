@@ -90,10 +90,7 @@ class InMemStorage(StorageProviderBase):
                 self._store.remove(i)
 
     def find_by_key(self, key, value):
-        for i in self._store:
-            if i[key] == value:
-                return i
-        return None
+        return next((i for i in self._store if i[key] == value), None)
 
 
 class SqliteStorage(StorageProviderBase):
@@ -155,8 +152,7 @@ class SqliteStorage(StorageProviderBase):
             cursor = conn.cursor()
             cursor.execute(f'''SELECT * FROM {self._table_name}
                                       WHERE {key}="{value}"''')
-            row = cursor.fetchone()
-            if row:
+            if row := cursor.fetchone():
                 return dict(zip(self.COLUMN_NAMES, row))
             return None
 

@@ -99,9 +99,7 @@ class GenericClient(BaseClient):
             # only Attr values that are subclas of Simple Attr are stored as list in matchdict
             # since complex attrs like Range can't be compared with string matching.
             if issubclass(i, SimpleAttr):
-                matchdict[attrname] = []
-                for val, desc in regattrs_dict[i]:
-                    matchdict[attrname].append(val)
+                matchdict[attrname] = [val for val, desc in regattrs_dict[i]]
         for elem in args:
             if isinstance(elem, a.Time):
                 matchdict['Start Time'] = elem.start
@@ -134,7 +132,7 @@ class GenericClient(BaseClient):
         class uses to dispatch queries to this Client.
         """
         regattrs_dict = cls.register_values()
-        optional = {k for k in regattrs_dict.keys()} - cls.required
+        optional = set(regattrs_dict.keys()) - cls.required
         if not cls.check_attr_types_in_query(query, cls.required, optional):
             return False
         for key in regattrs_dict:
@@ -173,11 +171,7 @@ class GenericClient(BaseClient):
         rowdict['End Time'] = end
         for k in matchdict:
             if k not in ('Start Time', 'End Time', 'Wavelength'):
-                if k == 'Physobs':
-                    # not changing case for Phsyobs
-                    rowdict[k] = matchdict[k][0]
-                else:
-                    rowdict[k] = matchdict[k][0].upper()
+                rowdict[k] = matchdict[k][0] if k == 'Physobs' else matchdict[k][0].upper()
         for k in exdict:
             if k not in ['year', 'month', 'day', 'hour', 'minute', 'second']:
                 rowdict[k] = exdict[k]
@@ -286,10 +280,7 @@ class GenericClient(BaseClient):
         if isinstance(qres, QueryResponseRow):
             qres = qres.as_table()
 
-        urls = []
-        if len(qres):
-            urls = list(qres['url'])
-
+        urls = list(qres['url']) if len(qres) else []
         filenames = [url.split('/')[-1] for url in urls]
 
         paths = self._get_full_filenames(qres, filenames, path)

@@ -91,11 +91,9 @@ class UnifiedResponse(Sequence):
         if isinstance(aslice, (int, slice)):
             ret = self._list[aslice]
 
-        # using the client's name for indexing the responses.
         elif isinstance(aslice, str):
             ret = self._getitem_string(aslice)
 
-        # Make sure we only have a length two slice.
         elif isinstance(aslice, tuple):
             if len(aslice) > 2:
                 raise IndexError("UnifiedResponse objects can only "
@@ -108,9 +106,7 @@ class UnifiedResponse(Sequence):
                 intermediate = self._list[aslice[0]]
 
             if isinstance(intermediate, list):
-                ret = []
-                for client_resp in intermediate:
-                    ret.append(client_resp[aslice[1]])
+                ret = [client_resp[aslice[1]] for client_resp in intermediate]
             else:
                 ret = intermediate[aslice[1]]
 
@@ -171,14 +167,13 @@ class UnifiedResponse(Sequence):
 
     @property
     @deprecated("2.1", "The same behaviour can be obtained by iterating over the object directly")
-    def responses(self):  # pragma: no cover
+    def responses(self):    # pragma: no cover
         """
         A generator of all the `sunpy.net.dataretriever.client.QueryResponse`
         objects contained in the `~sunpy.net.fido_factory.UnifiedResponse`
         object.
         """
-        for table in self:
-            yield table
+        yield from self
 
     def keys(self):
         """
@@ -475,10 +470,9 @@ class UnifiedDownloaderFactory(BasicRegistrationFactory):
 
     def _check_registered_widgets(self, *args):
         """Factory helper function"""
-        candidate_widget_types = list()
-        for key in self.registry:
-            if self.registry[key](*args):
-                candidate_widget_types.append(key)
+        candidate_widget_types = [
+            key for key in self.registry if self.registry[key](*args)
+        ]
 
         n_matches = len(candidate_widget_types)
         if n_matches == 0:
@@ -506,7 +500,7 @@ class UnifiedDownloaderFactory(BasicRegistrationFactory):
         results = []
         for client in candidate_widget_types:
             tmpclient = client()
-            kwargs = dict()
+            kwargs = {}
             # Handle the change in response format in the VSO
             if isinstance(tmpclient, vso.VSOClient):
                 kwargs = dict(response_format="table")

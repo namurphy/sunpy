@@ -98,12 +98,12 @@ def qr_block_with_kev_unit():
 
 def test_fits_header_entry_equality():
     assert FitsHeaderEntry('key', 'value') == FitsHeaderEntry('key', 'value')
-    assert not (FitsHeaderEntry('key', 'value') == FitsHeaderEntry('k', 'v'))
+    assert FitsHeaderEntry('key', 'value') != FitsHeaderEntry('k', 'v')
 
 
 def test_fits_header_entry_inequality():
     assert FitsHeaderEntry('key', 'value') != FitsHeaderEntry('k', 'v')
-    assert not (FitsHeaderEntry('k', 'v') != FitsHeaderEntry('k', 'v'))
+    assert FitsHeaderEntry('k', 'v') == FitsHeaderEntry('k', 'v')
 
 
 def test_fits_header_entry_hashability():
@@ -112,12 +112,12 @@ def test_fits_header_entry_hashability():
 
 def test_tag_equality():
     assert Tag('abc') == Tag('abc')
-    assert not (Tag('abc') == Tag('xyz'))
+    assert Tag('abc') != Tag('xyz')
 
 
 def test_tag_inequality():
     assert Tag('abc') != Tag('xyz')
-    assert not (Tag('abc') != Tag('abc'))
+    assert Tag('abc') == Tag('abc')
 
 
 def test_tag_hashability():

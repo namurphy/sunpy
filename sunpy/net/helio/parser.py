@@ -62,8 +62,7 @@ def webservice_parser(service='HEC'):
 
     for interface in root.iter('interface'):
         service_type = interface.attrib
-        key = list(service_type.keys())
-        if len(key) > 0:
+        if key := list(service_type.keys()):
             value = service_type[key[0]]
             if value == 'vr:WebService':
                 for url in interface.iter('accessURL'):
@@ -151,7 +150,7 @@ def taverna_parser(link):
     for web_link in endpoints:
         if 'Taverna' in web_link and web_link not in taverna_links:
             taverna_links.append(web_link)
-    if len(taverna_links) == 0:
+    if not taverna_links:
         return None
     return taverna_links
 
@@ -223,11 +222,9 @@ def wsdl_retriever(service='HEC'):
         this function to take a while to return. Timeout duration can be
         controlled through the LINK_TIMEOUT value
     """
-    service_links = webservice_parser(service=service)
-    if service_links:
+    if service_links := webservice_parser(service=service):
         for link in service_links:
-            wsdl_links = taverna_parser(link)
-            if wsdl_links:
+            if wsdl_links := taverna_parser(link):
                 for end_point in wsdl_links:
                     if end_point and link_test(end_point):
                         return end_point

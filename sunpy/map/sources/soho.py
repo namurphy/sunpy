@@ -116,7 +116,7 @@ class LASCOMap(GenericMap):
         # If non-standard Keyword is present, correct it too, for compatibility.
         if 'date_obs' in self.meta:
             self.meta['date_obs'] = self.meta['date-obs']
-        self._nickname = self.instrument + "-" + self.detector
+        self._nickname = f'{self.instrument}-{self.detector}'
         self.plot_settings['cmap'] = 'soholasco{det!s}'.format(det=self.detector[1])
         self.plot_settings['norm'] = ImageNormalize(
             stretch=source_stretch(self.meta, PowerStretch(0.5)), clip=False)
@@ -178,7 +178,7 @@ class MDIMap(GenericMap):
         super().__init__(data, header, **kwargs)
 
         # Fill in some missing or broken info
-        self._nickname = self.detector + " " + self.measurement
+        self._nickname = f'{self.detector} {self.measurement}'
         vmin = np.nanmin(self.data)
         vmax = np.nanmax(self.data)
         threshold = max([abs(vmin), abs(vmax)])

@@ -62,8 +62,7 @@ def mock_query_object(suvi_client):
                 '/goes/goes16/l2/data/suvi-l2-ci094/2019/05/25/'
                 'dr_suvi-l2-ci094_g16_s20190525T005200Z_e20190525T005600Z_v1-0-0.fits')
     }
-    results = QueryResponse([obj], client=suvi_client)
-    return results
+    return QueryResponse([obj], client=suvi_client)
 
 
 def test_attr_reg():

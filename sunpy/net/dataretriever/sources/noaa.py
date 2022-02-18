@@ -64,13 +64,12 @@ class NOAAIndicesClient(GenericClient):
     @classmethod
     def register_values(cls):
         from sunpy.net import attrs
-        adict = {attrs.Instrument: [
+        return {attrs.Instrument: [
             ('NOAA-Indices', 'Recent Solar Indices of Observed Monthly Mean Values')],
             attrs.Physobs: [('sunspot number', 'Sunspot Number.')],
             attrs.Source: [('SIDC', 'The Solar Influence Data Analysis Center')],
             attrs.Provider: [('SWPC', 'The Space Weather Prediction Center.')],
             attrs.Time: [('*')]}
-        return adict
 
 
 class NOAAPredictClient(GenericClient):
@@ -119,13 +118,20 @@ class NOAAPredictClient(GenericClient):
     @classmethod
     def register_values(cls):
         from sunpy.net import attrs
-        adict = {attrs.Instrument: [
-            ('NOAA-Predict', 'Predicted Sunspot Number And Radio Flux Values With Expected Ranges.')],
+        return {
+            attrs.Instrument: [
+                (
+                    'NOAA-Predict',
+                    'Predicted Sunspot Number And Radio Flux Values With Expected Ranges.',
+                )
+            ],
             attrs.Physobs: [('sunspot number', 'Sunspot Number.')],
-            attrs.Source: [('ISES', 'The International Space Environmental Services.')],
+            attrs.Source: [
+                ('ISES', 'The International Space Environmental Services.')
+            ],
             attrs.Provider: [('SWPC', 'The Space Weather Prediction Center.')],
-            attrs.Time: [('*')]}
-        return adict
+            attrs.Time: [('*')],
+        }
 
 
 class SRSClient(GenericClient):
@@ -164,7 +170,7 @@ class SRSClient(GenericClient):
         """
         Returns a list of urls corresponding to a given time-range.
         """
-        result = list()
+        result = []
         # Validate time range srs generated daily since 1996
         cur_year = Time.now().datetime.year
         req_start_year = timerange.start.datetime.year
@@ -181,8 +187,8 @@ class SRSClient(GenericClient):
 
         # Search for tarballs for all years in the query
         tarball_timerange = TimeRange(f'{start_year}-01-01', f'{end_year}-12-31 23:59:59.999')
-        tarball_urls = dict()
-        tarball_scraper = Scraper(self.BASE_URL + '%Y/%Y_SRS.tar.gz')
+        tarball_urls = {}
+        tarball_scraper = Scraper(f'{self.BASE_URL}%Y/%Y_SRS.tar.gz')
         tarballs = tarball_scraper.filelist(tarball_timerange)
         max_tarball_year = None
         for tb_url in tarballs:
@@ -194,14 +200,14 @@ class SRSClient(GenericClient):
 
         # Create a new time range for the times not covered by tarballs, have to assume tarballs
         # cover a year, and look for individual srs file for this time range.
-        srs_urls = dict()
-        min_file_year = max_tarball_year if max_tarball_year else start_year
+        srs_urls = {}
+        min_file_year = max_tarball_year or start_year
         min_file_date = (datetime(max_tarball_year, 12, 31, 23, 59, 59) if max_tarball_year else
                          datetime(start_year, 1, 1, 0, 0, 0))
         max_file_date = min(timerange.end.datetime, Time.now().datetime)
         if min_file_date < max_file_date:
             file_timerange = TimeRange(f'{min_file_year}-01-01', max_file_date)
-            srsfile_scraper = Scraper(self.BASE_URL + '%Y/SRS/%Y%m%dSRS.txt')
+            srsfile_scraper = Scraper(f'{self.BASE_URL}%Y/SRS/%Y%m%dSRS.txt')
             srsfiles = srsfile_scraper.filelist(file_timerange)
             for srs_url in srsfiles:
                 date = srsfile_scraper._extractDateURL(srs_url)
@@ -214,9 +220,9 @@ class SRSClient(GenericClient):
             day_ymd = (int(day.strftime('%Y')), int(day.strftime('%m')), int(day.strftime('%d')))
             extdict = {'year': day_ymd[0], 'month': day_ymd[1], 'day': day_ymd[2]}
             if self.MIN_YEAR <= day_ymd[0] <= cur_year:
-                if day_ymd[0] in tarball_urls.keys():
+                if day_ymd[0] in tarball_urls:
                     result.append((extdict, tarball_urls[day_ymd[0]]))
-                elif day_ymd in srs_urls.keys():
+                elif day_ymd in srs_urls:
                     result.append((extdict, srs_urls[day_ymd]))
 
         return result
@@ -249,10 +255,10 @@ class SRSClient(GenericClient):
         local_filenames = []
         for url, qre in zip(urls, qres):
             name = url.split('/')[-1]
-            day = qre['Start Time']
             if name not in filenames:
                 filenames.append(name)
             if name.endswith('.gz'):
+                day = qre['Start Time']
                 local_filenames.append('{}SRS.txt'.format(day.strftime('%Y%m%d')))
             else:
                 local_filenames.append(name)
@@ -288,7 +294,7 @@ class SRSClient(GenericClient):
                     with tarfile.open(fname2) as open_tar:
                         filepath = fname.parent
                         try:
-                            member = open_tar.getmember('SRS/' + srs_filename)
+                            member = open_tar.getmember(f'SRS/{srs_filename}')
                         except KeyError:
                             # Some tars have a {year}_SRS when extracted, 2010 being one example
                             member = open_tar.getmember(f'{year}_SRS/' + srs_filename)
@@ -298,7 +304,7 @@ class SRSClient(GenericClient):
                     past_year = True
                     break
 
-            if past_year is False:
+            if not past_year:
                 outfiles.append(fname)
 
         paths.data = list(map(str, outfiles))
@@ -307,9 +313,14 @@ class SRSClient(GenericClient):
     @classmethod
     def register_values(cls):
         from sunpy.net import attrs
-        adict = {attrs.Instrument: [("SOON", "Solar Region Summary."),
-                                    ("SRS-Table", "Solar Region Summary.")],
-                 attrs.Physobs: [('SRS', 'Solar Region Summary.')],
-                 attrs.Source: [('SWPC', 'The Space Weather Prediction Center.')],
-                 attrs.Provider: [('NOAA', 'The National Oceanic and Atmospheric Administration.')]}
-        return adict
+        return {
+            attrs.Instrument: [
+                ("SOON", "Solar Region Summary."),
+                ("SRS-Table", "Solar Region Summary."),
+            ],
+            attrs.Physobs: [('SRS', 'Solar Region Summary.')],
+            attrs.Source: [('SWPC', 'The Space Weather Prediction Center.')],
+            attrs.Provider: [
+                ('NOAA', 'The National Oceanic and Atmospheric Administration.')
+            ],
+        }

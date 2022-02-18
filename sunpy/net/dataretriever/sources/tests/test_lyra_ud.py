@@ -96,7 +96,9 @@ def test_client_repr(LCClient):
     Repr check
     """
     output = str(LCClient)
-    assert output[:50] == 'sunpy.net.dataretriever.sources.lyra.LYRAClient\n\nP'
+    assert output.startswith(
+        'sunpy.net.dataretriever.sources.lyra.LYRAClient\n\nP'
+    )
 
 
 def mock_query_object(LCClient):
@@ -117,8 +119,7 @@ def mock_query_object(LCClient):
         'url': ('http://proba2.oma.be/lyra/data/bsd/2016/01/01/'
                 'lyra_20160101-000000_lev2_std.fits')
     }
-    results = QueryResponse([obj], client=LCClient)
-    return results
+    return QueryResponse([obj], client=LCClient)
 
 
 def test_show(LCClient):

@@ -126,12 +126,8 @@ def get_detector_sun_angles_for_time(time, file):
                             sun.apparent_declination(time)]
     # now Sun position with RA in degrees
     sun_pos = [sunpos_ra_not_in_deg[0].to('deg'), sunpos_ra_not_in_deg[1]]
-    # sun_pos = [(sunpos_ra_not_in_deg[0] / 24) * 360., sunpos_ra_not_in_deg[1]]
-    # now get the angle between each detector and the Sun
-    detector_to_sun_angles = (get_detector_separation_angles(detector_radecs,
+    return (get_detector_separation_angles(detector_radecs,
                                                              sun_pos))
-
-    return detector_to_sun_angles
 
 
 @add_common_docstring(**_variables_for_parse_time_docstring())
@@ -185,7 +181,7 @@ def get_detector_sun_angles_for_date(date, file):
     key_list = ['n0', 'n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7', 'n8', 'n9',
                 'n10', 'n11', 'time']
     for i in range(13):
-        if not key_list[i] == 'time':
+        if key_list[i] != 'time':
             angles[key_list[i]] = [item[key_list[i]].value
                                    for item in detector_to_sun_angles] * u.deg
         else:
@@ -210,12 +206,15 @@ def plot_detector_sun_angles(angles):
     # make a plot showing the angles vs time
     figure = plt.figure(1)
     for n in angles.keys():
-        if not n == 'time':
+        if n != 'time':
             plt.plot(
                 angles['time'],
                 angles[n].value,
                 label='{lab} ({val})'.format(
-                    lab=n, val=str(np.mean(angles[n].value))[0:5]))
+                    lab=n, val=str(np.mean(angles[n].value))[:5]
+                ),
+            )
+
     plt.ylim(180, 0)
     plt.ylabel('angle (degrees)')
     plt.xlabel('Start time: ' + angles['time'][0].isoformat())
@@ -249,9 +248,7 @@ def get_scx_scz_at_time(time, file):
 
     time = parse_time(time)
     hdulist = fits.open(file)
-    timesinutc = []
-    for tim in hdulist[1].data['START']:
-        timesinutc.append(met_to_utc(tim))
+    timesinutc = [met_to_utc(tim) for tim in hdulist[1].data['START']]
     ind = np.searchsorted(timesinutc, time)
 
     scx_radec = (Longitude(hdulist[1].data['RA_SCX'][ind] * u.deg),
@@ -283,10 +280,7 @@ def get_scx_scz_in_timerange(timerange, file):
     """
 
     hdulist = fits.open(file)
-    timesinutc = []
-    for tim in hdulist[1].data['START']:
-        timesinutc.append(met_to_utc(tim))
-
+    timesinutc = [met_to_utc(tim) for tim in hdulist[1].data['START']]
     startind = np.searchsorted(timesinutc, timerange.start)
     endind = np.searchsorted(timesinutc, timerange.end)
 
@@ -314,8 +308,7 @@ def nai_detector_angles():
     The Astrophysical Journal 702.1 (2009): 791.
     """
 
-    # angles listed as [azimuth, zenith]
-    detectors = {'n0': [45.89 * u.deg, 20.58 * u.deg],
+    return {'n0': [45.89 * u.deg, 20.58 * u.deg],
                  'n1': [45.11 * u.deg, 45.31 * u.deg],
                  'n2': [58.44 * u.deg, 90.21 * u.deg],
                  'n3': [314.87 * u.deg, 45.24 * u.deg],
@@ -327,8 +320,6 @@ def nai_detector_angles():
                  'n9': [135.19 * u.deg, 45.55 * u.deg],
                  'n10': [123.73 * u.deg, 90.42 * u.deg],
                  'n11': [183.74 * u.deg, 90.32 * u.deg]}
-
-    return detectors
 
 
 @add_common_docstring(**_variables_for_parse_time_docstring())
@@ -451,7 +442,7 @@ def get_detector_separation_angles(detector_radecs, sunpos):
     """
     angles = copy.deepcopy(detector_radecs)
     for l, d in detector_radecs.items():
-        if not l == 'time':
+        if l != 'time':
             angle = separation_angle(d, sunpos)
             angles[l] = angle
 
@@ -482,9 +473,7 @@ def separation_angle(radec1, radec2):
          np.sin(((90 * u.deg) - radec2[1].to('degree')).to('rad')) *
          np.cos((radec1[0].to('degree') - radec2[0].to('degree')).to('rad'))))
 
-    angle = (np.arccos(cosine_of_angle)).to('degree')
-
-    return angle
+    return (np.arccos(cosine_of_angle)).to('degree')
 
 
 def met_to_utc(timeinsec):

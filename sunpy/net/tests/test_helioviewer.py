@@ -36,7 +36,7 @@ def test_get_datasources(client):
     assert isinstance(client.data_sources, OrderedDict)
     assert isinstance(client.sources, dict)
     # Rough check that the ordered dict is ordered
-    assert list(client.data_sources.values())[0:3] == [0, 1, 2]
+    assert list(client.data_sources.values())[:3] == [0, 1, 2]
     aia_4500_id = client.data_sources['SDO', 'AIA', None, '4500']
     aia_4500_id_copy = client.sources['SDO']['AIA']['4500']['sourceId']
     assert isinstance(aia_4500_id, int)

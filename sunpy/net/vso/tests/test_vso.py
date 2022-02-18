@@ -40,7 +40,7 @@ class MockQRResponse:
 
     def __init__(self, records=None, errors=None):
 
-        self.provideritem = list()
+        self.provideritem = []
 
         if records is not None:
             self.provideritem = [MockObject(record=MockObject(recorditem=list(records)))]
@@ -244,7 +244,7 @@ def test_vso_hmi(client, tmpdir):
     for dri in dris:
         fileids = dri.fileiditem.fileid
         series = list(map(lambda x: x.split(':')[0], fileids))
-        assert all([s == series[0] for s in series])
+        assert all(s == series[0] for s in series)
 
 
 def test_get_online_vso_url(mocker):
@@ -280,7 +280,7 @@ def test_incorrect_content_disposition(client):
     results = client.search(
         core_attrs.Time('2011/1/1 01:00', '2011/1/1 01:02'),
         core_attrs.Instrument('mdi'), response_format="table")
-    files = client.fetch(results[0:1])
+    files = client.fetch(results[:1])
 
     assert len(files) == 1
     assert files[0].endswith("mdi_vw_v_9466622_9466622.tar")
@@ -320,7 +320,9 @@ def test_vso_repr(client):
     Repr check (it is really long)
     """
     output = str(client)
-    assert output[:50] == 'sunpy.net.vso.vso.VSOClient\n\nProvides access to qu'
+    assert output.startswith(
+        'sunpy.net.vso.vso.VSOClient\n\nProvides access to qu'
+    )
 
 
 @pytest.mark.remote_data

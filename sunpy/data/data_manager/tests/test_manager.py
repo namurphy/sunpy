@@ -32,7 +32,7 @@ def test_file_tampered(manager, storage, downloader, data_function):
     Test calling function multiple times does not redownload.
     """
     data_function()
-    write_to_test_file(manager._tempdir + '/test_file', 'b')
+    write_to_test_file(f'{manager._tempdir}/test_file', 'b')
     with pytest.warns(SunpyUserWarning):
         data_function()
 

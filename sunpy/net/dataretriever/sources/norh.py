@@ -77,10 +77,19 @@ class NoRHClient(GenericClient):
     @classmethod
     def register_values(cls):
         from sunpy.net import attrs
-        adict = {attrs.Instrument: [('NORH',
-                                     ('Nobeyama Radio Heliograph is an imaging radio telescope at 17 '
-                                      'or 34GHz located at the Nobeyama Solar Radio Observatory.'))],
-                 attrs.Source: [('NAOJ', 'The National Astronomical Observatory of Japan')],
-                 attrs.Provider: [('NRO', 'Nobeyama Radio Observatory')],
-                 attrs.Wavelength: [('*')]}
-        return adict
+        return {
+            attrs.Instrument: [
+                (
+                    'NORH',
+                    (
+                        'Nobeyama Radio Heliograph is an imaging radio telescope at 17 '
+                        'or 34GHz located at the Nobeyama Solar Radio Observatory.'
+                    ),
+                )
+            ],
+            attrs.Source: [
+                ('NAOJ', 'The National Astronomical Observatory of Japan')
+            ],
+            attrs.Provider: [('NRO', 'Nobeyama Radio Observatory')],
+            attrs.Wavelength: [('*')],
+        }

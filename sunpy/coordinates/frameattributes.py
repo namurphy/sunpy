@@ -98,15 +98,13 @@ class ObserverCoordinateAttribute(CoordinateAttribute):
     """
 
     def convert_input(self, value):
-        # Keep string here.
         if isinstance(value, str):
             return value, False
-        else:
-            # Upgrade the coordinate to a `SkyCoord` so that frame attributes will be merged
-            if isinstance(value, BaseCoordinateFrame) and not isinstance(value, self._frame):
-                value = SkyCoord(value)
+        # Upgrade the coordinate to a `SkyCoord` so that frame attributes will be merged
+        if isinstance(value, BaseCoordinateFrame) and not isinstance(value, self._frame):
+            value = SkyCoord(value)
 
-            return super().convert_input(value)
+        return super().convert_input(value)
 
     def _convert_string_to_coord(self, out, obstime):
         """
@@ -129,17 +127,16 @@ class ObserverCoordinateAttribute(CoordinateAttribute):
     def __get__(self, instance, frame_cls=None):
         # If instance is None then we can't get obstime so it doesn't matter.
         if instance is not None:
-            observer = getattr(instance, '_' + self.name)
+            observer = getattr(instance, f'_{self.name}')
             obstime = getattr(instance, 'obstime', None)  # TODO: Why is this `None` needed?
 
             # If the observer is a string and we have obstime then calculate
             # the position of the observer.
             if isinstance(observer, str):
-                if observer != "self" and obstime is not None:
-                    new_observer = self._convert_string_to_coord(observer.lower(), obstime)
-                    new_observer.object_name = observer
-                    setattr(instance, '_' + self.name, new_observer)
-                else:
+                if observer == "self" or obstime is None:
                     return observer
 
+                new_observer = self._convert_string_to_coord(observer.lower(), obstime)
+                new_observer.object_name = observer
+                setattr(instance, f'_{self.name}', new_observer)
         return super().__get__(instance, frame_cls=frame_cls)

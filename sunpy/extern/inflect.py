@@ -1452,10 +1452,11 @@ _pl_sb_postfix_adj_defn = {
     "force": ["pound"],
 }
 
-pl_sb_postfix_adj: Dict[str, str] = {}
+pl_sb_postfix_adj: Dict[str, str] = {
+    key: enclose(enclose("|".join(val)) + "(?=(?:-|\\s+)%s)" % key)
+    for key, val in _pl_sb_postfix_adj_defn.items()
+}
 
-for key, val in _pl_sb_postfix_adj_defn.items():
-    pl_sb_postfix_adj[key] = enclose(enclose("|".join(val)) + "(?=(?:-|\\s+)%s)" % key)
 
 pl_sb_postfix_adj_stems = "(" + "|".join(list(pl_sb_postfix_adj.values())) + ")(.*)"
 
@@ -1544,8 +1545,9 @@ pl_prep_bysize = bysize(pl_prep_list_da)
 pl_prep = enclose("|".join(pl_prep_list_da))
 
 pl_sb_prep_dual_compound = (
-    r"(.*?)((?:-|\s+)(?:" + pl_prep + r")(?:-|\s+))a(?:-|\s+)(.*)"
+    f'(.*?)((?:-|\\s+)(?:{pl_prep})(?:-|\\s+))a(?:-|\\s+)(.*)'
 )
+
 
 
 singular_pronoun_genders = {
@@ -1580,8 +1582,10 @@ pl_pron_nom = {
     "theirs": "theirs",
 }
 
-si_pron: Dict[str, Dict[str, Union[str, Dict[str, str]]]] = {}
-si_pron["nom"] = {v: k for (k, v) in pl_pron_nom.items()}
+si_pron: Dict[str, Dict[str, Union[str, Dict[str, str]]]] = {
+    'nom': {v: k for (k, v) in pl_pron_nom.items()}
+}
+
 si_pron["nom"]["we"] = "I"
 
 
@@ -1661,77 +1665,53 @@ def get_si_pron(thecase, word, gender):
 
 
 plverb_irregular_pres = {
-    # 1st PERS. SING.   2ND PERS. SING.   3RD PERS. SINGULAR
-    # 3RD PERS. (INDET.)
     "am": "are",
     "are": "are",
     "is": "are",
-    "was": "were",
     "were": "were",
     "was": "were",
     "have": "have",
-    "have": "have",
     "has": "have",
-    "do": "do",
     "do": "do",
     "does": "do",
 }
 
+
 plverb_ambiguous_pres = {
-    # 1st PERS. SING.  2ND PERS. SING.   3RD PERS. SINGULAR
-    # 3RD PERS. (INDET.)
-    "act": "act",
     "act": "act",
     "acts": "act",
     "blame": "blame",
-    "blame": "blame",
     "blames": "blame",
     "can": "can",
-    "can": "can",
-    "can": "can",
     "must": "must",
-    "must": "must",
-    "must": "must",
-    "fly": "fly",
     "fly": "fly",
     "flies": "fly",
     "copy": "copy",
-    "copy": "copy",
     "copies": "copy",
-    "drink": "drink",
     "drink": "drink",
     "drinks": "drink",
     "fight": "fight",
-    "fight": "fight",
     "fights": "fight",
-    "fire": "fire",
     "fire": "fire",
     "fires": "fire",
     "like": "like",
-    "like": "like",
     "likes": "like",
-    "look": "look",
     "look": "look",
     "looks": "look",
     "make": "make",
-    "make": "make",
     "makes": "make",
-    "reach": "reach",
     "reach": "reach",
     "reaches": "reach",
     "run": "run",
-    "run": "run",
     "runs": "run",
-    "sink": "sink",
     "sink": "sink",
     "sinks": "sink",
     "sleep": "sleep",
-    "sleep": "sleep",
     "sleeps": "sleep",
-    "view": "view",
     "view": "view",
     "views": "view",
 }
+
 
 plverb_ambiguous_pres_keys = enclose("|".join(list(plverb_ambiguous_pres.keys())))
 
@@ -2024,8 +2004,7 @@ class engine:
 
     def ud_match(self, word, wordlist):
         for i in range(len(wordlist) - 2, -2, -2):  # backwards through even elements
-            mo = re.search(r"^%s$" % wordlist[i], word, re.IGNORECASE)
-            if mo:
+            if mo := re.search(r"^%s$" % wordlist[i], word, re.IGNORECASE):
                 if wordlist[i + 1] is None:
                     return None
                 pl = re.sub(
@@ -2117,13 +2096,11 @@ class engine:
         elif isinstance(obj, ast.List):
             return [self._get_value_from_ast(e) for e in obj.elts]
         elif isinstance(obj, ast.Tuple):
-            return tuple([self._get_value_from_ast(e) for e in obj.elts])
+            return tuple(self._get_value_from_ast(e) for e in obj.elts)
 
-        # None, True and False are NameConstants in Py3.4 and above.
         elif isinstance(obj, ast.NameConstant):
             return obj.value
 
-        # For python versions below 3.4
         elif isinstance(obj, ast.Name) and (obj.id in ["True", "False", "None"]):
             return string_to_constant[obj.id]
 
@@ -2402,14 +2379,15 @@ class engine:
             return "s:p"
         self.classical_dict = classval.copy()
 
-        if pl == self.plural or pl == self.plural_noun:
+        if pl in [self.plural, self.plural_noun]:
             if self._pl_check_plurals_N(word1, word2):
                 return "p:p"
             if self._pl_check_plurals_N(word2, word1):
                 return "p:p"
-        if pl == self.plural or pl == self.plural_adj:
-            if self._pl_check_plurals_adj(word1, word2):
-                return "p:p"
+        if pl in [self.plural, self.plural_adj] and self._pl_check_plurals_adj(
+            word1, word2
+        ):
+            return "p:p"
         return False
 
     def _pl_reg_plurals(self, pair, stems, end1, end2):

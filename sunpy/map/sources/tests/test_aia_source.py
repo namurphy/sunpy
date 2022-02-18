@@ -2,6 +2,7 @@
 This particular test file pertains to AIAMap.
 @Author: Pritish C. (VaticanCameos)
 """
+
 import os
 import glob
 
@@ -17,10 +18,7 @@ jp2path = glob.glob(os.path.join(path, "2013_06_24__17_31_30_84__SDO_AIA_AIA_193
 aiaimg = glob.glob(os.path.join(path, "aia_171_level1.fits"))
 
 
-if SKIP_GLYMUR:
-    params = [aiaimg]
-else:
-    params = [aiaimg, jp2path]
+params = [aiaimg] if SKIP_GLYMUR else [aiaimg, jp2path]
 
 
 # The fixture is parameterized with aiaimg and jp2path.
@@ -28,8 +26,7 @@ else:
 def createAIAMap(request):
     """Creates an AIAMap as given in documentation examples, through AIA_171_IMAGE
     or through the use of the JP2 file."""
-    aiaobj = Map(request.param)
-    return aiaobj
+    return Map(request.param)
 
 # AIA Tests
 

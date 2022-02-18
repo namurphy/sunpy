@@ -41,7 +41,7 @@ class EUVIMap(GenericMap):
 
         # Try to identify when the FITS meta data does not have the correct
         # date FITS keyword
-        if ('date_obs' in self.meta) and not('date-obs' in self.meta):
+        if 'date_obs' in self.meta and 'date-obs' not in self.meta:
             self.meta['date-obs'] = self.meta['date_obs']
         # fix CROTA to CROTAn
         if "crota" in self.meta and "crota2" not in self.meta:
@@ -111,7 +111,7 @@ class CORMap(GenericMap):
 
         # Try to identify when the FITS meta data does not have the correct
         # date FITS keyword
-        if ('date_obs' in self.meta) and not('date-obs' in self.meta):
+        if 'date_obs' in self.meta and 'date-obs' not in self.meta:
             self.meta['date-obs'] = self.meta['date_obs']
 
     @property
@@ -157,7 +157,7 @@ class HIMap(GenericMap):
 
         # Try to identify when the FITS meta data does not have the correct
         # date FITS keyword
-        if ('date_obs' in self.meta) and not('date-obs' in self.meta):
+        if 'date_obs' in self.meta and 'date-obs' not in self.meta:
             self.meta['date-obs'] = self.meta['date_obs']
 
     @property

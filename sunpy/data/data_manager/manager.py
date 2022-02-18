@@ -49,8 +49,7 @@ class DataManager:
         def decorator(func):
             @functools.wraps(func)
             def wrapper(*args, **kwargs):
-                replace = self._skip_file.get(name, None)
-                if replace:
+                if replace := self._skip_file.get(name, None):
                     uri_parse = urlparse(replace['uri'])
                     if uri_parse.scheme in ("", "file"):
                         # If a relative file uri is specified (i.e.
@@ -69,41 +68,39 @@ class DataManager:
                             "Hash provided to override_file does not match hash of the file.")
                 elif self._skip_hash_check:
                     file_path = self._cache.download(urls, redownload=True)
-                else:
-                    details = self._cache.get_by_hash(sha_hash)
-                    if not details:
-                        # In case we are matching by hash and file does not exist
-                        # That might mean the wrong hash is supplied to decorator
-                        # We match by urls to make sure that is not the case
-                        if self._cache_has_file(urls):
-                            # If we can't find a file matching sha_hash, but the url is already
-                            # in the database
-                            raise ValueError(f"{urls} has already been downloaded, but no file "
-                                             f"matching the hash {sha_hash} can be found.")
-                        file_path = self._cache.download(urls)
-                        file_hash = hash_file(file_path)
-                        if file_hash != sha_hash:
-                            # the hash of the file downloaded does not match provided hash
-                            # this means the file has changed on the server.
-                            # the function should be updated to use the new
-                            # hash. Raise an error to notify.
-                            raise RuntimeError(
-                                f"Hash of local file ({file_hash}) does not match expected hash ({sha_hash}). "
-                                "File may have changed on the remote server.")
+                elif details := self._cache.get_by_hash(sha_hash):
+                    # This is to handle the case when the local file
+                    # appears to be tampered/corrupted
+                    if hash_file(details['file_path']) != details['file_hash']:
+                        warnings.warn("Hashes do not match, the file will be redownloaded (could be be tampered/corrupted)",
+                                      SunpyUserWarning)
+                        file_path = self._cache.download(urls, redownload=True)
+                        # Recheck the hash again, if this fails, we will exit.
+                        if hash_file(file_path) != details['file_hash']:
+                            raise RuntimeError("Redownloaded file also has the incorrect hash."
+                                               "The remote file on the server might have changed.")
                     else:
-                        # This is to handle the case when the local file
-                        # appears to be tampered/corrupted
-                        if hash_file(details['file_path']) != details['file_hash']:
-                            warnings.warn("Hashes do not match, the file will be redownloaded (could be be tampered/corrupted)",
-                                          SunpyUserWarning)
-                            file_path = self._cache.download(urls, redownload=True)
-                            # Recheck the hash again, if this fails, we will exit.
-                            if hash_file(file_path) != details['file_hash']:
-                                raise RuntimeError("Redownloaded file also has the incorrect hash."
-                                                   "The remote file on the server might have changed.")
-                        else:
-                            file_path = details['file_path']
+                        file_path = details['file_path']
 
+                else:
+                    # In case we are matching by hash and file does not exist
+                    # That might mean the wrong hash is supplied to decorator
+                    # We match by urls to make sure that is not the case
+                    if self._cache_has_file(urls):
+                        # If we can't find a file matching sha_hash, but the url is already
+                        # in the database
+                        raise ValueError(f"{urls} has already been downloaded, but no file "
+                                         f"matching the hash {sha_hash} can be found.")
+                    file_path = self._cache.download(urls)
+                    file_hash = hash_file(file_path)
+                    if file_hash != sha_hash:
+                        # the hash of the file downloaded does not match provided hash
+                        # this means the file has changed on the server.
+                        # the function should be updated to use the new
+                        # hash. Raise an error to notify.
+                        raise RuntimeError(
+                            f"Hash of local file ({file_hash}) does not match expected hash ({sha_hash}). "
+                            "File may have changed on the remote server.")
                 self._file_cache[name] = file_path
                 return func(*args, **kwargs)
             return wrapper
@@ -175,7 +172,4 @@ class DataManager:
         return pathlib.Path(self._file_cache[name])
 
     def _cache_has_file(self, urls):
-        for url in urls:
-            if self._cache._get_by_url(url):
-                return True
-        return False
+        return any(self._cache._get_by_url(url) for url in urls)

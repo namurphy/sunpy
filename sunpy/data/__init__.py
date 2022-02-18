@@ -15,15 +15,17 @@ _download_dir = config.get('downloads', 'remote_data_manager_dir')
 manager = DataManager(
     Cache(
         ParfiveDownloader(),
-        SqliteStorage(_download_dir + '/data_manager.db'),
-        _download_dir
+        SqliteStorage(f'{_download_dir}/data_manager.db'),
+        _download_dir,
     )
 )
+
 cache = Cache(
     ParfiveDownloader(),
-    SqliteStorage(CACHE_DIR + '/cache.db'),
+    SqliteStorage(f'{CACHE_DIR}/cache.db'),
     CACHE_DIR,
-    expiry=int(config.get('downloads', 'cache_expiry')) * u.day
+    expiry=int(config.get('downloads', 'cache_expiry')) * u.day,
 )
+
 
 __all__ = ["download_sample_data", "manager", "cache"]

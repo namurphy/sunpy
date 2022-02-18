@@ -127,9 +127,7 @@ class QueryResponseRow(Row):
         """
         Extract a value from the row if the key is present otherwise return the value of ``default``
         """
-        if key in self.colnames:
-            return self[key]
-        return default
+        return self[key] if key in self.colnames else default
 
     @property
     def response_block_map(self):
@@ -343,7 +341,7 @@ def _print_client(client, html=False, visible_entries=None):
         String with the client.
     """
     width = -1 if html else get_width()
-    class_name = f"{client.__module__+'.' or ''}{client.__class__.__name__}"
+    class_name = f'{f"{client.__module__}." or ""}{client.__class__.__name__}'
     attrs = client.register_values()
     lines = []
     t = Table(names=["Attr Type", "Name", "Description"],
@@ -414,9 +412,7 @@ class BaseClient(ABC):
 
         # Register client attrs after it has regsitered its own attrs
         from sunpy.net import attr
-        values = cls.register_values()
-        # If the client has no support, we won't try to register attrs
-        if values:
+        if values := cls.register_values():
             attr.Attr.update_values({cls: values})
 
     def __repr__(self):

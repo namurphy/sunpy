@@ -38,7 +38,7 @@ class HelioviewerClient:
 
         Here is a list of all of them: https://api.helioviewer.org/docs/v2/#appendix_datasources
         """
-        data_sources_dict = dict()
+        data_sources_dict = {}
         datasources = self.get_data_sources()
         for name, observ in datasources.items():
             # TRACE only has measurements and is thus nested once
@@ -433,10 +433,7 @@ class HelioviewerClient:
 
         res = downloader.download()
 
-        if len(res) == 1:
-            return res[0]
-        else:
-            return res
+        return res[0] if len(res) == 1 else res
 
     def _request(self, params):
         """
@@ -451,13 +448,12 @@ class HelioviewerClient:
         -------
         out : result of the request
         """
-        response = urllib.request.urlopen(
+        return urllib.request.urlopen(
             self._api, urllib.parse.urlencode(params).encode('utf-8'))
-        return response
 
     def _format_date(self, date):
         """Formats a date for Helioviewer API requests"""
-        return parse_time(date).isot + "Z"
+        return f'{parse_time(date).isot}Z'
 
     def _get_source_id(self, key):
         """

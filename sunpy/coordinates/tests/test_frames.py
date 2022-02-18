@@ -70,13 +70,8 @@ def test_create_hpc_2d(args, kwargs):
     assert isinstance(hpc1, Helioprojective)
     rep_kwarg = kwargs.get('representation_type', None) if kwargs else None
 
-    if rep_kwarg and rep_kwarg == 'unitspherical':
-        # Check that we have a unitspherical representation
-        assert isinstance(hpc1._data, UnitSphericalRepresentation)
-    else:
-        # Check that we have a 2D wrap180 representation
-        assert isinstance(hpc1._data, UnitSphericalRepresentation)
-
+    # Check that we have a unitspherical representation
+    assert isinstance(hpc1._data, UnitSphericalRepresentation)
     # Check the attrs are correct
     assert hpc1.Tx == 0 * u.arcsec
     assert hpc1.Ty == 0 * u.arcsec
@@ -99,13 +94,8 @@ def test_create_3d(args, kwargs):
     assert isinstance(hpc1, Helioprojective)
     rep_kwarg = kwargs.get('representation_type', None) if kwargs else None
 
-    if rep_kwarg and rep_kwarg == 'spherical':
-        # Check that we have a unitspherical representation
-        assert isinstance(hpc1._data, SphericalRepresentation)
-    else:
-        # Check that we have a 2D wrap180 representation
-        assert isinstance(hpc1._data, SphericalRepresentation)
-
+    # Check that we have a unitspherical representation
+    assert isinstance(hpc1._data, SphericalRepresentation)
     # Check the attrs are correct
     assert hpc1.Tx == 0 * u.arcsec
     assert hpc1.Ty == 0 * u.arcsec
@@ -251,13 +241,9 @@ def test_create_hgs_2d(frame, args, kwargs):
     # Check we have the right class!
     assert isinstance(hgs1, frame)
     # Check Carrington first because it's a subclass of Stonyhurst
-    if isinstance(hgs1, HeliographicCarrington):
+    if isinstance(hgs1, (HeliographicCarrington, HeliographicStonyhurst)):
         # Check that we have a 2D wrap180 representation
         assert isinstance(hgs1._data, SphericalRepresentation)
-    elif isinstance(hgs1, HeliographicStonyhurst):
-        # Check that we have a 2D wrap180 representation
-        assert isinstance(hgs1._data, SphericalRepresentation)
-
     # Check the attrs are correct
     assert hgs1.lon == 0 * u.deg
     assert hgs1.lat == 0 * u.deg
@@ -306,17 +292,13 @@ def test_create_hgs_3d(frame, args, kwargs):
 
     rep_kwarg = kwargs.get('representation_type', None) if kwargs else None
 
-    if rep_kwarg == 'spherical':
+    if (
+        rep_kwarg != 'spherical'
+        and isinstance(hgs1, (HeliographicCarrington, HeliographicStonyhurst))
+        or rep_kwarg == 'spherical'
+    ):
+        # Check that we have a 2D wrap180 representation
         assert isinstance(hgs1._data, SphericalRepresentation)
-    else:
-        # Check Carrington first because it's a subclass of Stonyhurst
-        if isinstance(hgs1, HeliographicCarrington):
-            # Check that we have a 2D wrap180 representation
-            assert isinstance(hgs1._data, SphericalRepresentation)
-        elif isinstance(hgs1, HeliographicStonyhurst):
-            # Check that we have a 2D wrap180 representation
-            assert isinstance(hgs1._data, SphericalRepresentation)
-
     # Check the attrs are correct
     assert hgs1.lon == 0 * u.deg
     assert hgs1.lat == 0 * u.deg

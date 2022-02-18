@@ -120,11 +120,7 @@ def make_fitswcs_header(data, coordinate,
     if isinstance(coordinate, frames.Heliocentric):
         raise ValueError("This function does not currently support heliocentric coordinates.")
 
-    if hasattr(data, "shape"):
-        shape = data.shape
-    else:
-        shape = data
-
+    shape = data.shape if hasattr(data, "shape") else data
     meta_wcs = _get_wcs_meta(coordinate, projection_code)
 
     meta_instrument = _get_instrument_meta(instrument, telescope, observatory, wavelength, exposure)
@@ -165,9 +161,7 @@ def make_fitswcs_header(data, coordinate,
             coordinate.rsun, coordinate.observer.radius
         ).to_value(u.arcsec)
 
-    meta_dict = MetaDict(meta_wcs)
-
-    return meta_dict
+    return MetaDict(meta_wcs)
 
 
 def _get_wcs_meta(coordinate, projection_code):
@@ -222,9 +216,8 @@ def get_observer_meta(observer, rsun: (u.Mm, None)):
             * rsun_ref
     """
     observer = observer.transform_to(frames.HeliographicStonyhurst(obstime=observer.obstime))
-    coord_meta = {}
+    coord_meta = {'hgln_obs': observer.lon.to_value(u.deg)}
 
-    coord_meta['hgln_obs'] = observer.lon.to_value(u.deg)
     coord_meta['hglt_obs'] = observer.lat.to_value(u.deg)
     coord_meta['dsun_obs'] = observer.radius.to_value(u.m)
     if rsun is not None:

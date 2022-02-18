@@ -118,9 +118,7 @@ def test_parsed_dbase():
     filename, _ = urlretrieve(
         "https://hesperia.gsfc.nasa.gov/hessidata/dbase/hsi_obssumm_filedb_200311.txt")
     dbase = sunpy.instr.rhessi.parse_observing_summary_dbase_file(filename)
-    rows = {}
-    for key in dbase.keys():
-        rows[key] = dbase[key][:5]
+    rows = {key: dbase[key][:5] for key in dbase.keys()}
     assert rows == parsed_dbase()
 
 
@@ -199,7 +197,7 @@ def test_client_repr(LCClient):
     Repr check
     """
     output = str(LCClient)
-    assert output[:50] == 'sunpy.net.dataretriever.sources.rhessi.RHESSIClien'
+    assert output.startswith('sunpy.net.dataretriever.sources.rhessi.RHESSIClien')
 
 
 def mock_query_object(LCClient):
@@ -219,8 +217,7 @@ def mock_query_object(LCClient):
         'url': ('https://hesperia.gsfc.nasa.gov/hessidata/metadata/'
                 'catalog/hsi_obssumm_20160101_078.fits')
     }
-    results = QueryResponse([obj], client=LCClient)
-    return results
+    return QueryResponse([obj], client=LCClient)
 
 
 def test_show(LCClient):

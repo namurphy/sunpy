@@ -134,10 +134,12 @@ def get_header(afile):
             header['HISTORY'] = history
 
             # Strip out KEYCOMMENTS to a dict, the hard way
-            keydict = {}
-            for card in hdu.header.cards:
-                if card.comment != '':
-                    keydict.update({card.keyword: card.comment})
+            keydict = {
+                card.keyword: card.comment
+                for card in hdu.header.cards
+                if card.comment != ''
+            }
+
             header['KEYCOMMENTS'] = keydict
             waveunit = extract_waveunit(header)
             if waveunit is not None:

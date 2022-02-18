@@ -59,12 +59,12 @@ def _print_attrs(attr, html=False):
     # Only sort the attrs if any have been registered
     sorted_attrs = _ATTR_TUPLE(*zip(*sorted(zip(*attrs)))) if attrs.name else make_tuple()
     *other_row_data, descs = sorted_attrs
-    descs = [(dsc[:77] + '...') if len(dsc) > 80 else dsc for dsc in descs]
+    descs = [f'{dsc[:77]}...' if len(dsc) > 80 else dsc for dsc in descs]
     table = Table(names=["Attribute Name", "Client", "Full Name", "Description"],
                   dtype=["U80", "U80", "U80", "U80"],
                   data=[*other_row_data, descs])
 
-    class_name = f"{(attr.__module__ + '.') or ''}{attr.__name__}"
+    class_name = f'{f"{attr.__module__}." or ""}{attr.__name__}'
     lines = [class_name]
     # If the attr lacks a __doc__ this will error and prevent this from returning anything.
     try:
@@ -168,9 +168,7 @@ class Attr(metaclass=AttrMeta):
         raise NotImplementedError
 
     def __eq__(self, other):
-        if not isinstance(other, Attr):
-            return False
-        return vars(self) == vars(other)
+        return False if not isinstance(other, Attr) else vars(self) == vars(other)
 
     @classmethod
     def update_values(cls, adict):
@@ -243,7 +241,7 @@ class Attr(metaclass=AttrMeta):
                         number_str = number_match.group(1)
                         name = p.number_to_words(number_str)
                         if number_str != number_match.string:
-                            name = name + "_" + number_match.string[number_match.end(1):]
+                            name = f'{name}_{number_match.string[number_match.end(1):]}'
                     except AttributeError:
                         name = pair[0]
 
@@ -258,7 +256,7 @@ class Attr(metaclass=AttrMeta):
                     if keyword.iskeyword(name):
                         # Attribute name has been appended with `_`
                         # to make it a valid identifier since its a python keyword.
-                        name = name + '_'
+                        name = f'{name}_'
 
                     attr_tuple[0].append(name)
                     attr_tuple[1].append(client.__name__.replace("Client", ""))

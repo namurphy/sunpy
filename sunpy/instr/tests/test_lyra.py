@@ -372,9 +372,9 @@ def test_prep_columns():
     Test whether _prep_columns correctly prepares data.
     """
     # Generate simple input data
-    time_input = TIME[0:2]
+    time_input = TIME[:2]
     time_input.precision = 9
-    channels_input = [CHANNELS[0][0:2], CHANNELS[1][0:2]]
+    channels_input = [CHANNELS[0][:2], CHANNELS[1][:2]]
     filecolumns_input = ["time", "channel0", "channel1"]
 
     # Test case when channels and filecolumns are supplied by user.

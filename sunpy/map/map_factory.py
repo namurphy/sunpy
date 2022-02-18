@@ -284,8 +284,7 @@ class MapFactory(BasicRegistrationFactory):
     def _parse_url(self, arg, **kwargs):
         url = arg.full_url
         path = str(cache.download(url).absolute())
-        pairs = self._read_file(path, **kwargs)
-        return pairs
+        return self._read_file(path, **kwargs)
 
     @_parse_arg.register(pathlib.Path)
     def _parse_path(self, arg, **kwargs):
@@ -332,7 +331,7 @@ class MapFactory(BasicRegistrationFactory):
         as `memmap` for FITS files.
         """
         data_header_pairs = self._parse_args(*args, silence_errors=silence_errors, **kwargs)
-        new_maps = list()
+        new_maps = []
 
         # Loop over each registered type and check to see if WidgetType
         # matches the arguments.  If it does, use that type.
@@ -371,13 +370,12 @@ class MapFactory(BasicRegistrationFactory):
 
     def _check_registered_widgets(self, data, meta, **kwargs):
 
-        candidate_widget_types = list()
+        candidate_widget_types = [
+            key
+            for key in self.registry
+            if self.registry[key](data, meta, **kwargs)
+        ]
 
-        for key in self.registry:
-
-            # Call the registered validation function for each registered class
-            if self.registry[key](data, meta, **kwargs):
-                candidate_widget_types.append(key)
 
         n_matches = len(candidate_widget_types)
 

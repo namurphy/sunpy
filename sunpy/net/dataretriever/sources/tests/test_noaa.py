@@ -44,8 +44,7 @@ def mock_query_object(start_date, end_date):
         'Provider': 'SWPC',
         'url': 'https://services.swpc.noaa.gov/json/solar-cycle/observed-solar-cycle-indices.json'
     }
-    results = QueryResponse([obj], client=noaa.NOAAIndicesClient())
-    return results
+    return QueryResponse([obj], client=noaa.NOAAIndicesClient())
 
 
 @pytest.mark.remote_data
@@ -241,7 +240,7 @@ def test_client_repr(indices_client):
     Repr check
     """
     output = str(indices_client)
-    assert output[:50] == 'sunpy.net.dataretriever.sources.noaa.NOAAIndicesCl'
+    assert output.startswith('sunpy.net.dataretriever.sources.noaa.NOAAIndicesCl')
 
 
 def test_show():

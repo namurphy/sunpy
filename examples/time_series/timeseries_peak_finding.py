@@ -82,13 +82,12 @@ def findpeaks(series, DELTA):
                 mx = value
                 mxpos = time_pos
                 start = False
-        else:
-            if value > mn+DELTA:
-                # a local minima
-                minpeaks.append((mnpos, mn))
-                mx = value
-                mxpos = time_pos
-                lookformax = True
+        elif value > mn+DELTA:
+            # a local minima
+            minpeaks.append((mnpos, mn))
+            mx = value
+            mxpos = time_pos
+            lookformax = True
     # check for extrema at end
     if value > mn+DELTA:
         maxpeaks.append((mxpos, mx))

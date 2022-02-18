@@ -85,4 +85,6 @@ def test_client_repr(GSClient):
     Repr check
     """
     output = str(GSClient)
-    assert output[:50] == 'sunpy.net.dataretriever.sources.gong.GONGClient\n\nP'
+    assert output.startswith(
+        'sunpy.net.dataretriever.sources.gong.GONGClient\n\nP'
+    )

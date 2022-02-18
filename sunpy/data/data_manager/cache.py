@@ -125,8 +125,7 @@ class Cache:
         sha_hash: `str`
             SHA-256 hash of the file.
         """
-        details = self._storage.find_by_key('file_hash', sha_hash)
-        return details
+        return self._storage.find_by_key('file_hash', sha_hash)
 
     def _get_by_url(self, url):
         """
@@ -137,8 +136,7 @@ class Cache:
         url: `str`
             URL of the file.
         """
-        details = self._storage.find_by_key('url', url)
-        return details
+        return self._storage.find_by_key('url', url)
 
     def _download_and_hash(self, urls):
         """

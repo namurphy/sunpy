@@ -252,9 +252,7 @@ def test_link_test_on_urlerror(mock_link_test):
 @pytest.fixture(scope="session")
 def client():
     try:
-        client = HECClient()
-        return client
-    # If no links are found, the client should raise a ValueError
+        return HECClient()
     except ValueError:
         pytest.xfail("No HELIO working links found.")
 

@@ -15,7 +15,7 @@ def test_retry_sample_data(tmpdir):
     # Inside _retry_sample_data, the base url will be updated to point towards
     # http://data.sunpy.org/sunpy/v1/
     result_retry = _retry_sample_data(result)
-    assert result_retry == [tmpdir.strpath+'/tca110607.fits']
+    assert result_retry == [f'{tmpdir.strpath}/tca110607.fits']
     assert result_retry.errors == []
 
 
@@ -24,5 +24,5 @@ def test_download_sample_data(tmpdir):
     # Download a simple random file off the internet.
     result = _download_sample_data(
         "http://ipv4.download.thinkbroadband.com", [("5MB.zip", tmpdir.strpath+"/5MB.zip")], False)
-    assert result == [tmpdir.strpath+"/5MB.zip"]
+    assert result == [f'{tmpdir.strpath}/5MB.zip']
     assert result.errors == []

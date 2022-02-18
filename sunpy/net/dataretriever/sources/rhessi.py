@@ -103,12 +103,17 @@ class RHESSIClient(GenericClient):
             dbase_file_name, hdrs = self.get_observing_summary_dbase_file(this_month)
             dbase_dat = rhessi.parse_observing_summary_dbase_file(dbase_file_name)
             this_month_obssumm_filenames = dbase_dat.get('filename')
-            daily_filenames_dates = [datetime.strptime(
-                d[0:20], 'hsi_obssumm_%Y%m%d') for d in this_month_obssumm_filenames]
-            for i, this_date in enumerate(daily_filenames_dates):
-                if dt.start <= this_date <= dt.end:
-                    filenames.append(
-                        get_base_url()+f'metadata/catalog/{this_month_obssumm_filenames[i]}s')
+            daily_filenames_dates = [
+                datetime.strptime(d[:20], 'hsi_obssumm_%Y%m%d')
+                for d in this_month_obssumm_filenames
+            ]
+
+            filenames.extend(
+                get_base_url()
+                + f'metadata/catalog/{this_month_obssumm_filenames[i]}s'
+                for i, this_date in enumerate(daily_filenames_dates)
+                if dt.start <= this_date <= dt.end
+            )
 
         return filenames
 
@@ -165,9 +170,15 @@ class RHESSIClient(GenericClient):
     @classmethod
     def register_values(cls):
         from sunpy.net import attrs
-        adict = {attrs.Instrument: [('RHESSI',
-                                     'Reuven Ramaty High Energy Solar Spectroscopic Imager.')],
-                 attrs.Physobs: [("summary_lightcurve", "A summary lightcurve.")],
-                 attrs.Source: [('RHESSI', 'Reuven Ramaty High Energy Solar Spectroscopic Imager.')],
-                 attrs.Provider: [('NASA', 'The National Aeronautics and Space Administration.')]}
-        return adict
+        return {
+            attrs.Instrument: [
+                ('RHESSI', 'Reuven Ramaty High Energy Solar Spectroscopic Imager.')
+            ],
+            attrs.Physobs: [("summary_lightcurve", "A summary lightcurve.")],
+            attrs.Source: [
+                ('RHESSI', 'Reuven Ramaty High Energy Solar Spectroscopic Imager.')
+            ],
+            attrs.Provider: [
+                ('NASA', 'The National Aeronautics and Space Administration.')
+            ],
+        }

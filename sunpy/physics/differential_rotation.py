@@ -152,7 +152,7 @@ def _validate_observer_args(initial_obstime, observer, time):
                 "The 'observer' must be an astropy.coordinates.BaseCoordinateFrame or an astropy.coordinates.SkyCoord.")
         if observer.obstime is None:
             raise ValueError("The observer 'obstime' property must not be None.")
-    elif observer is None and time is None:
+    elif time is None:
         raise ValueError("Either the 'observer' or the 'time' keyword must not be None.")
 
 
@@ -201,7 +201,7 @@ def _get_new_observer(initial_obstime, observer, time):
         new_observer = observer
     elif time is not None:
         warnings.warn("Using 'time' assumes an Earth-based observer.")
-        if isinstance(time, TimeDelta) or isinstance(time, u.Quantity):
+        if isinstance(time, (TimeDelta, u.Quantity)):
             new_observer_time = initial_obstime + time
         else:
             new_observer_time = parse_time(time)
@@ -347,12 +347,11 @@ def _rotate_submap_edge(smap, pixels, observer, **diff_rot_kwargs):
     # Coordinates
     c = smap.pixel_to_world(pixels[:, 0], pixels[:, 1])
 
-    # Only apply solar rotation if all coordinates are on the disk.
-    if np.all(~coordinate_is_on_solar_disk(c)):
-        coordinates = deepcopy(c)
-    else:
-        coordinates = solar_rotate_coordinate(c, observer=observer, **diff_rot_kwargs)
-    return coordinates
+    return (
+        deepcopy(c)
+        if np.all(~coordinate_is_on_solar_disk(c))
+        else solar_rotate_coordinate(c, observer=observer, **diff_rot_kwargs)
+    )
 
 
 def _get_extreme_position(coords, axis, operator=np.nanmax):
@@ -655,18 +654,17 @@ def differential_rotate(smap, observer=None, time=None, **diff_rot_kwargs):
     # Add a new HGS observer
     out_meta.update(get_observer_meta(new_observer, out_meta['rsun_ref']*u.m))
 
-    if is_sub_full_disk:
-        # Define a new reference pixel and the value at the reference pixel.
-        # Note that according to the FITS convention the first pixel in the
-        # image is at (1.0, 1.0).
-        center_rotated = solar_rotate_coordinate(
-            smap.center, observer=new_observer, **diff_rot_kwargs)
-        out_meta['crval1'] = center_rotated.Tx.value
-        out_meta['crval2'] = center_rotated.Ty.value
-        out_meta['crpix1'] = 1 + smap.data.shape[1]/2.0 + \
-            ((center_rotated.Tx - smap.center.Tx)/smap.scale.axis1).value
-        out_meta['crpix2'] = 1 + smap.data.shape[0]/2.0 + \
-            ((center_rotated.Ty - smap.center.Ty)/smap.scale.axis2).value
-        return smap._new_instance(out_data, out_meta).submap(rotated_bl, top_right=rotated_tr)
-    else:
+    if not is_sub_full_disk:
         return smap._new_instance(out_data, out_meta)
+    # Define a new reference pixel and the value at the reference pixel.
+    # Note that according to the FITS convention the first pixel in the
+    # image is at (1.0, 1.0).
+    center_rotated = solar_rotate_coordinate(
+        smap.center, observer=new_observer, **diff_rot_kwargs)
+    out_meta['crval1'] = center_rotated.Tx.value
+    out_meta['crval2'] = center_rotated.Ty.value
+    out_meta['crpix1'] = 1 + smap.data.shape[1]/2.0 + \
+        ((center_rotated.Tx - smap.center.Tx)/smap.scale.axis1).value
+    out_meta['crpix2'] = 1 + smap.data.shape[0]/2.0 + \
+        ((center_rotated.Ty - smap.center.Ty)/smap.scale.axis2).value
+    return smap._new_instance(out_data, out_meta).submap(rotated_bl, top_right=rotated_tr)

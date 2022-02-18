@@ -162,7 +162,7 @@ def uncompress_countrate(compressed_countrate):
     ll = np.arange(0, 16, 1)
     lkup = np.zeros(256, dtype='int')
     _sum = 0
-    for i in range(0, 16):
+    for i in range(16):
         lkup[16 * i:16 * (i + 1)] = ll * 2 ** i + _sum
         if i < 15:
             _sum = lkup[16 * (i + 1) - 1] + 2 ** i
@@ -237,9 +237,7 @@ def _backproject(calibrated_event_list, detector=8, pixel_size=(1., 1.),
     phase_modulation = np.cos(phase_pixel)
     gridmod = modamp * grid_transmission
     probability_of_transmission = gridmod * phase_modulation + grid_transmission
-    bproj_image = np.inner(probability_of_transmission, count).reshape(image_dim)
-
-    return bproj_image
+    return np.inner(probability_of_transmission, count).reshape(image_dim)
 
 
 @u.quantity_input
@@ -311,9 +309,7 @@ def backprojection(calibrated_event_list, pixel_size: u.arcsec = (1., 1.) * u.ar
         "DSUN_OBS": sun.earth_distance(time_range.center).value * sunpy.sun.constants.au.value
     }
 
-    result_map = sunpy.map.Map(image, dict_header)
-
-    return result_map
+    return sunpy.map.Map(image, dict_header)
 
 
 def _build_energy_bands(label, bands):

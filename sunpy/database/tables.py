@@ -332,16 +332,16 @@ class DatabaseEntry(DatabaseEntryType, Base):
             unit = u.Unit(waveunit)
         if wave.wavemin is None:
             wavemin = None
+        elif unit is None:
+            raise WaveunitNotFoundError(qr_block)
         else:
-            if unit is None:
-                raise WaveunitNotFoundError(qr_block)
             wavemin = unit.to(u.nm, float(wave.wavemin),
                               equivalencies.spectral())
         if wave.wavemax is None:
             wavemax = None
+        elif unit is None:
+            raise WaveunitNotFoundError(qr_block)
         else:
-            if unit is None:
-                raise WaveunitNotFoundError(qr_block)
             wavemax = unit.to(u.nm, float(wave.wavemax),
                               equivalencies.spectral())
         source = getattr(qr_block, 'source', None)
@@ -393,14 +393,13 @@ class DatabaseEntry(DatabaseEntryType, Base):
         wavelengths = sr_block.get('Wavelength', np.nan * u.nm)
         if wavelengths is None:
             wavelengths = np.nan * u.nm
-        if isinstance(wavelengths, u.Quantity):
-            if wavelengths.isscalar:
-                wavemin = wavemax = wavelengths.to_value(u.nm, equivalencies=u.spectral())
-            else:
-                wavemin, wavemax = wavelengths.to_value(u.nm, equivalencies=u.spectral())
-        else:
+        if not isinstance(wavelengths, u.Quantity):
             raise TypeError("Expected Wavelength in the Fido response to be None or a Quantity")
 
+        if wavelengths.isscalar:
+            wavemin = wavemax = wavelengths.to_value(u.nm, equivalencies=u.spectral())
+        else:
+            wavemin, wavemax = wavelengths.to_value(u.nm, equivalencies=u.spectral())
         fileid = sr_block.get('url', sr_block.get('fileid'))
         size = None
         return cls(
@@ -461,10 +460,10 @@ class DatabaseEntry(DatabaseEntryType, Base):
         """
         if len(attribute_list) == 0:
             raise TypeError('At least one attribute required')
-        for attribute in attribute_list:
-            if getattr(self, attribute) != getattr(other, attribute):
-                return False
-        return True
+        return all(
+            getattr(self, attribute) == getattr(other, attribute)
+            for attribute in attribute_list
+        )
 
     def __hash__(self):
         return super().__hash__()
@@ -480,8 +479,7 @@ class DatabaseEntry(DatabaseEntryType, Base):
             'fits_header_entries', 'tags']
         ret = f'<{self.__class__.__name__}('
         for attr in attrs:
-            value = getattr(self, attr, None)
-            if value:
+            if value := getattr(self, attr, None):
                 ret += f'{attr} {value!r}, '
         ret = ret.rstrip(', ')
         ret += ')>'
@@ -659,10 +657,7 @@ def entries_from_file(file, default_waveunit=None,
         if header == DEFAULT_HEADER:
             headers.remove(header)
 
-    if isinstance(file, str):
-        filename = file
-    else:
-        filename = getattr(file, 'name', None)
+    filename = file if isinstance(file, str) else getattr(file, 'name', None)
     for header in headers:
         entry = DatabaseEntry(path=filename)
         for key, value in header.items():
@@ -823,16 +818,12 @@ def _create_display_table(database_entries, columns=None, sort=False):
                 row.append(', '.join(map(str, entry.tags)) or 'N/A')
             elif col == 'hdu_index':
                 row.append(entry.hdu_index)
-            # do not display microseconds in datetime columns
             elif col in (
                     'observation_time_start',
                     'observation_time_end',
                     'download_time'):
                 time = getattr(entry, col, None)
-                if time is None:
-                    formatted_time = 'N/A'
-                else:
-                    formatted_time = time.strftime(TIME_FORMAT)
+                formatted_time = 'N/A' if time is None else time.strftime(TIME_FORMAT)
                 row.append(formatted_time)
             else:
                 row.append(str(getattr(entry, col) or 'N/A'))

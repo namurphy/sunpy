@@ -102,7 +102,9 @@ def test_client_repr(LCClient):
     Repr check
     """
     output = str(LCClient)
-    assert output[:50] == 'sunpy.net.dataretriever.sources.norh.NoRHClient\n\nP'
+    assert output.startswith(
+        'sunpy.net.dataretriever.sources.norh.NoRHClient\n\nP'
+    )
 
 
 def mock_query_object(LCClient):
@@ -122,8 +124,7 @@ def mock_query_object(LCClient):
         'Wavelength': wave,
         'url': 'ftp://solar-pub.nao.ac.jp/pub/nsro/norh/data/tcx/2016/01/tca160101'
     }
-    results = QueryResponse([obj], client=LCClient)
-    return results
+    return QueryResponse([obj], client=LCClient)
 
 
 def test_show(LCClient):

@@ -40,53 +40,30 @@ def _frame_parameters():
     """
     Returns formatting dictionary to use with add_common_docstring to populate frame docstrings
     """
-    ret = {}
+    ret = {
+        'data': 'data : `~astropy.coordinates.BaseRepresentation` or ``None``\n        A representation object or ``None`` to have no data\n        (or use the coordinate component arguments, see below).',
+        'common': f"obstime : {_variables_for_parse_time_docstring()['parse_time_types']}\n"
+        "        The time of the observation.  This is used to determine the\n"
+        "        position of solar-system bodies (e.g., the Sun and the Earth) as\n"
+        "        needed to define the origin and orientation of the frame.\n"
+        "    representation_type : `~astropy.coordinates.BaseRepresentation`, str, optional\n"
+        "        A representation class or string name of a representation class.\n"
+        "        This may change the valid coordinate component arguments from the\n"
+        "        defaults (see above). For example, passing\n"
+        "        ``representation_type='cartesian'`` will make the frame expect\n"
+        "        Cartesian coordinate component arguments (typically, ``x``, ``y``,\n"
+        "        and ``z``).\n"
+        "    copy : bool, optional\n"
+        "        If `True` (default), make copies of the input coordinate arrays.",
+        'lonlat': 'lon : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`, optional\n        The longitude coordinate for this object (``lat`` must also be\n        given and ``data`` must be ``None``).\n        Not needed if ``data`` is given.\n    lat : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`, optional\n        The latitude coordinate for this object (``lon`` must also be\n        given and ``data`` must be ``None``).\n        Not needed if ``data`` is given.',
+        'radius': 'radius : `~astropy.units.Quantity`, optional\n        The radial distance coordinate from Sun center for this object.\n        Defaults to the radius of the Sun. Not needed if ``data`` is given.',
+        'distance_sun': 'distance : `~astropy.units.Quantity`, optional\n        The distance coordinate from Sun center for this object.\n        Not needed if ``data`` is given.',
+        'distance_earth': 'distance : `~astropy.units.Quantity`, optional\n        The distance coordinate from Earth center for this object.\n        Not needed if ``data`` is given.',
+        'xyz': 'x : `~astropy.units.Quantity`, optional\n        X-axis coordinate for this object. Not needed if ``data`` is given.\n    y : `~astropy.units.Quantity`, optional\n        Y-axis coordinate for this object. Not needed if ``data`` is given.\n    z : `~astropy.units.Quantity`, optional\n        Z-axis coordinate for this object. Not needed if ``data`` is given.',
+        'observer': 'observer : `~sunpy.coordinates.frames.HeliographicStonyhurst`, str\n        The location of the observer. If a string is provided,\n        it must be a solar system body that can be parsed by\n        `~sunpy.coordinates.ephemeris.get_body_heliographic_stonyhurst`\n        at the time ``obstime``. Defaults to Earth center.',
+    }
 
-    # Each text block is missing the first indent because it already exists in the frame docstring
-    ret['data'] = ("data : `~astropy.coordinates.BaseRepresentation` or ``None``\n"
-                   "        A representation object or ``None`` to have no data\n"
-                   "        (or use the coordinate component arguments, see below).")
-    ret['common'] = (f"obstime : {_variables_for_parse_time_docstring()['parse_time_types']}\n"
-                     "        The time of the observation.  This is used to determine the\n"
-                     "        position of solar-system bodies (e.g., the Sun and the Earth) as\n"
-                     "        needed to define the origin and orientation of the frame.\n"
-                     "    representation_type : `~astropy.coordinates.BaseRepresentation`, str, optional\n"
-                     "        A representation class or string name of a representation class.\n"
-                     "        This may change the valid coordinate component arguments from the\n"
-                     "        defaults (see above). For example, passing\n"
-                     "        ``representation_type='cartesian'`` will make the frame expect\n"
-                     "        Cartesian coordinate component arguments (typically, ``x``, ``y``,\n"
-                     "        and ``z``).\n"
-                     "    copy : bool, optional\n"
-                     "        If `True` (default), make copies of the input coordinate arrays.")
-    ret['lonlat'] = ("lon : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`, optional\n"
-                     "        The longitude coordinate for this object (``lat`` must also be\n"
-                     "        given and ``data`` must be ``None``).\n"
-                     "        Not needed if ``data`` is given.\n"
-                     "    lat : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`, optional\n"
-                     "        The latitude coordinate for this object (``lon`` must also be\n"
-                     "        given and ``data`` must be ``None``).\n"
-                     "        Not needed if ``data`` is given.")
-    ret['radius'] = ("radius : `~astropy.units.Quantity`, optional\n"
-                     "        The radial distance coordinate from Sun center for this object.\n"
-                     "        Defaults to the radius of the Sun. Not needed if ``data`` is given.")
-    ret['distance_sun'] = ("distance : `~astropy.units.Quantity`, optional\n"
-                           "        The distance coordinate from Sun center for this object.\n"
-                           "        Not needed if ``data`` is given.")
-    ret['distance_earth'] = ("distance : `~astropy.units.Quantity`, optional\n"
-                             "        The distance coordinate from Earth center for this object.\n"
-                             "        Not needed if ``data`` is given.")
-    ret['xyz'] = ("x : `~astropy.units.Quantity`, optional\n"
-                  "        X-axis coordinate for this object. Not needed if ``data`` is given.\n"
-                  "    y : `~astropy.units.Quantity`, optional\n"
-                  "        Y-axis coordinate for this object. Not needed if ``data`` is given.\n"
-                  "    z : `~astropy.units.Quantity`, optional\n"
-                  "        Z-axis coordinate for this object. Not needed if ``data`` is given.")
-    ret['observer'] = ("observer : `~sunpy.coordinates.frames.HeliographicStonyhurst`, str\n"
-                       "        The location of the observer. If a string is provided,\n"
-                       "        it must be a solar system body that can be parsed by\n"
-                       "        `~sunpy.coordinates.ephemeris.get_body_heliographic_stonyhurst`\n"
-                       "        at the time ``obstime``. Defaults to Earth center.")
+
     ret['equinox'] = (f"equinox : {_variables_for_parse_time_docstring()['parse_time_types']}\n"
                       "        The date for the mean vernal equinox.\n"
                       "        Defaults to the J2000.0 equinox.")

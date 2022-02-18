@@ -112,10 +112,7 @@ def remove_lytaf_events_from_timeseries(ts, artifacts=None,
     ts_new._data = pandas.DataFrame(
         index=time, data={col: channels[i]
                           for i, col in enumerate(data_columns)})
-    if return_artifacts:
-        return ts_new, artifact_status
-    else:
-        return ts_new
+    return (ts_new, artifact_status) if return_artifacts else ts_new
 
 
 def _remove_lytaf_events(time, channels=None, artifacts=None,
@@ -275,17 +272,12 @@ def _remove_lytaf_events(time, channels=None, artifacts=None,
                            "not_removed": np.delete(lytaf, artifact_indices),
                            "not_found": artifacts_not_found}
 
-    # Return values.
-    if return_artifacts:
-        if not channels:
-            return clean_time, artifact_status
-        else:
-            return clean_time, clean_channels, artifact_status
+    if not return_artifacts:
+        return clean_time if not channels else (clean_time, clean_channels)
+    if not channels:
+        return clean_time, artifact_status
     else:
-        if not channels:
-            return clean_time
-        else:
-            return clean_time, clean_channels
+        return clean_time, clean_channels, artifact_status
 
 
 def get_lytaf_events(start_time, end_time,
@@ -354,13 +346,13 @@ def get_lytaf_events(start_time, end_time,
     start_time = parse_time(start_time)
     end_time = parse_time(end_time)
     # Check combine_files contains correct inputs
-    if not all(suffix in ["lyra", "manual", "ppt", "science"]
-               for suffix in combine_files):
+    if any(
+        suffix not in ["lyra", "manual", "ppt", "science"]
+        for suffix in combine_files
+    ):
         raise ValueError("Elements in combine_files must be strings equalling "
                          "'lyra', 'manual', 'ppt', or 'science'.")
-    # Remove any duplicates from combine_files input
-    combine_files = list(set(combine_files))
-    combine_files.sort()
+    combine_files = sorted(set(combine_files))
     # Convert input times to UNIX timestamp format since this is the
     # time format in the annotation files
     start_time_uts = (start_time - Time('1970-1-1')).sec
@@ -396,17 +388,18 @@ def get_lytaf_events(start_time, end_time,
         db_last_end_time = cursor.fetchone()[0]
         db_last_end_time = datetime.datetime.fromtimestamp(db_last_end_time)
         # If lytaf does not include entire input time range...
-        if not force_use_local_lytaf:
-            if end_time > db_last_end_time or start_time < db_first_begin_time:
-                # ...close lytaf file...
-                cursor.close()
-                connection.close()
-                # ...Download latest lytaf file...
-                lytaf_path = cache.download(urljoin(LYTAF_REMOTE_PATH, dbname),
-                                            redownload=True)
-                # ...and open new version of lytaf database.
-                connection = sqlite3.connect(str(lytaf_path))
-                cursor = connection.cursor()
+        if not force_use_local_lytaf and (
+            end_time > db_last_end_time or start_time < db_first_begin_time
+        ):
+            # ...close lytaf file...
+            cursor.close()
+            connection.close()
+            # ...Download latest lytaf file...
+            lytaf_path = cache.download(urljoin(LYTAF_REMOTE_PATH, dbname),
+                                        redownload=True)
+            # ...and open new version of lytaf database.
+            connection = sqlite3.connect(str(lytaf_path))
+            cursor = connection.cursor()
         # Select and extract the data from event table within file within
         # given time range
         cursor.execute("select insertion_time, begin_time, reference_time, "
@@ -454,8 +447,7 @@ def get_lytaf_events(start_time, end_time,
             csvwriter.writerow(lytaf.dtype.names)
             # Write data.
             for row in lytaf:
-                new_row = []
-                new_row.append(row[0].strftime("%Y-%m-%dT%H:%M:%S"))
+                new_row = [row[0].strftime("%Y-%m-%dT%H:%M:%S")]
                 new_row.append(row[1].strftime("%Y-%m-%dT%H:%M:%S"))
                 new_row.append(row[2].strftime("%Y-%m-%dT%H:%M:%S"))
                 new_row.append(row[3].strftime("%Y-%m-%dT%H:%M:%S"))
@@ -500,7 +492,7 @@ def get_lytaf_event_types(print_event_types=True):
             print("----------------\n{} database\n----------------"
                   .format(suffix))
             for event_type in event_types:
-                print(str(event_type[0]))
+                print(event_type[0])
             print(" ")
     # Unpack event types in all_event_types into single list
     all_event_types = [event_type[0] for event_types in all_event_types
@@ -537,7 +529,7 @@ def split_series_using_lytaf(timearray, data, lytaf):
     time_array = [parse_time(tim) for tim in timearray]
 
     # scan through each entry retrieved from the LYTAF database
-    for j in range(0, el):
+    for j in range(el):
         # want to mark all times with events as bad in the mask, i.e. = 0
         start_dt = lytaf['begin_time'][j]
         end_dt = lytaf['end_time'][j]
@@ -579,14 +571,11 @@ def split_series_using_lytaf(timearray, data, lytaf):
             # can't index h+1 here. Go to end of series
             subtimes = time_array[disc[h]:-1]
             subdata = data[disc[h]:-1]
-            subseries = {'subtimes': subtimes, 'subdata': subdata}
-            split_series.append(subseries)
         else:
             subtimes = time_array[disc[h]:disc[h+1]]
             subdata = data[disc[h]:disc[h+1]]
-            subseries = {'subtimes': subtimes, 'subdata': subdata}
-            split_series.append(subseries)
-
+        subseries = {'subtimes': subtimes, 'subdata': subdata}
+        split_series.append(subseries)
     return split_series
 
 
@@ -598,27 +587,27 @@ def _lytaf_event2string(integers):
     for i in integers:
         if i == 1:
             out.append('LAR')
-        if i == 2:
-            out.append('N/A')
-        if i == 3:
-            out.append('UV occult.')
-        if i == 4:
-            out.append('Vis. occult.')
-        if i == 5:
-            out.append('Offpoint')
-        if i == 6:
-            out.append('SAA')
-        if i == 7:
-            out.append('Auroral zone')
-        if i == 8:
-            out.append('Moon in LYRA')
-        if i == 9:
-            out.append('Moon in SWAP')
-        if i == 10:
+        elif i == 10:
             out.append('Venus in LYRA')
-        if i == 11:
+        elif i == 11:
             out.append('Venus in SWAP')
 
+        elif i == 2:
+            out.append('N/A')
+        elif i == 3:
+            out.append('UV occult.')
+        elif i == 4:
+            out.append('Vis. occult.')
+        elif i == 5:
+            out.append('Offpoint')
+        elif i == 6:
+            out.append('SAA')
+        elif i == 7:
+            out.append('Auroral zone')
+        elif i == 8:
+            out.append('Moon in LYRA')
+        elif i == 9:
+            out.append('Moon in SWAP')
     return out
 
 
@@ -650,28 +639,21 @@ def _prep_columns(time, channels=None, filecolumns=None):
     string_time = np.array(time.isot)
 
     if filecolumns:
-        if all(isinstance(column, str) for column in filecolumns) is False:
+        if not all(isinstance(column, str) for column in filecolumns):
             raise TypeError("All elements in filecolumns must by strings.")
         # ...and that there are the same number of elements as there
         # are arrays in channels, plus 1 for a time array.  Otherwise
         # raise a ValueError.
-        if channels:
-            ncol = 1 + len(channels)
-        else:
-            ncol = 1
+        ncol = 1 + len(channels) if channels else 1
         if len(filecolumns) != ncol:
             raise ValueError("Number of elements in filecolumns must be "
                              "equal to the number of input data arrays, "
                              "i.e. time + elements in channels.")
-    # If filenames not given, create a list of columns names of the
-    # form: ["time", "channel0", "channel1",...,"channelN"] where N
-    # is the number of arrays in channels (assuming 0-indexed counting).
+    elif channels:
+        filecolumns = [f"channel{fluxnum}"
+                       for fluxnum in range(len(channels))]
+        filecolumns.insert(0, "time")
     else:
-        if channels:
-            filecolumns = [f"channel{fluxnum}"
-                           for fluxnum in range(len(channels))]
-            filecolumns.insert(0, "time")
-        else:
-            filecolumns = ["time"]
+        filecolumns = ["time"]
 
     return string_time, filecolumns

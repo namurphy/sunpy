@@ -77,7 +77,7 @@ class CompositeMap:
             transparent images.
         """
         if zorder is None:
-            zorder = max([m.zorder for m in self._maps]) + 10
+            zorder = max(m.zorder for m in self._maps) + 10
 
         amap.zorder = zorder
         amap.alpha = alpha
@@ -328,17 +328,18 @@ class CompositeMap:
                         'heliographic_longitude']
         if index is None:
             for i, amap in enumerate(self._maps):
-                if all([hasattr(amap, k) for k in needed_attrs]):
+                if all(hasattr(amap, k) for k in needed_attrs):
                     index = i
                     break
 
-        index_check = all([hasattr(self._maps[index], k) for k in needed_attrs])
+        index_check = all(hasattr(self._maps[index], k) for k in needed_attrs)
         if not index_check or index is None:
             raise ValueError("Specified index does not have all"
                              " the required attributes to draw grid.")
 
-        ax = self._maps[index].draw_grid(axes=axes, grid_spacing=grid_spacing, **kwargs)
-        return ax
+        return self._maps[index].draw_grid(
+            axes=axes, grid_spacing=grid_spacing, **kwargs
+        )
 
     def plot(self, axes=None, annotate=True,
              title="SunPy Composite Plot", **matplot_args):

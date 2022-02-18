@@ -36,8 +36,16 @@ class GONGClient(GenericClient):
     @classmethod
     def register_values(cls):
         from sunpy.net import attrs
-        adict = {attrs.Instrument: [("GONG", "Global Oscillation Network Group.")],
-                 attrs.Physobs: [("LOS_MAGNETIC_FIELD", "Line of sight magnetic field")],
-                 attrs.Provider: [('NSO', 'National Solar Observatory.')],
-                 attrs.ExtentType: [("SYNOPTIC", "Coverage of a complete solar rotation synthesized over time")]}
-        return adict
+        return {
+            attrs.Instrument: [("GONG", "Global Oscillation Network Group.")],
+            attrs.Physobs: [
+                ("LOS_MAGNETIC_FIELD", "Line of sight magnetic field")
+            ],
+            attrs.Provider: [('NSO', 'National Solar Observatory.')],
+            attrs.ExtentType: [
+                (
+                    "SYNOPTIC",
+                    "Coverage of a complete solar rotation synthesized over time",
+                )
+            ],
+        }

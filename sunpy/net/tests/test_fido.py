@@ -182,7 +182,7 @@ UnifiedResponse Tests
 def test_unifiedresponse_slicing():
     results = Fido.search(
         a.Time("2012/1/1", "2012/1/5"), a.Instrument.lyra)
-    assert isinstance(results[0:2], UnifiedResponse)
+    assert isinstance(results[:2], UnifiedResponse)
     assert isinstance(results[0], QueryResponseTable)
 
 
@@ -298,8 +298,8 @@ def test_fido_indexing(queries):
 
     assert isinstance(res[1:], UnifiedResponse)
     assert len(res[1:]) == 1
-    assert isinstance(res[0:1], UnifiedResponse)
-    assert len(res[0:1]) == 1
+    assert isinstance(res[:1], UnifiedResponse)
+    assert len(res[:1]) == 1
 
     assert isinstance(res[1:, 0], UnifiedResponse)
     assert len(res[1:, 0]) == 1
@@ -420,9 +420,9 @@ def results_generator(dl):
         http = list(dl.http_queue._queue)
         ftp = list(dl.ftp_queue._queue)
 
-    outputs = []
-    for url in http + ftp:
-        outputs.append(pathlib.Path(url.keywords['url'].split("/")[-1]))
+    outputs = [
+        pathlib.Path(url.keywords['url'].split("/")[-1]) for url in http + ftp
+    ]
 
     return Results(outputs)
 
@@ -516,7 +516,7 @@ def test_slice_jsoc():
 
 def test_fido_repr():
     output = repr(Fido)
-    assert output[:50] == '<sunpy.net.fido_factory.UnifiedDownloaderFactory o'
+    assert output.startswith('<sunpy.net.fido_factory.UnifiedDownloaderFactory o')
 
 
 @pytest.mark.remote_data

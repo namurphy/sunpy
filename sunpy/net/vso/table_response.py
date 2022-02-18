@@ -30,8 +30,8 @@ def iter_sort_response(response):
     `list`
         Sorted record items w.r.t. their start time.
     """
-    has_time_recs = list()
-    has_notime_recs = list()
+    has_time_recs = []
+    has_notime_recs = []
     for prov_item in response.provideritem:
         if not hasattr(prov_item, 'record') or not prov_item.record:
             continue
@@ -44,8 +44,7 @@ def iter_sort_response(response):
             else:
                 has_notime_recs.append(rec)
     has_time_recs = sorted(has_time_recs, key=lambda x: x.time.start)
-    all_recs = has_time_recs + has_notime_recs
-    return all_recs
+    return has_time_recs + has_notime_recs
 
 
 class VSOQueryResponseTable(QueryResponseTable):
@@ -59,11 +58,7 @@ class VSOQueryResponseTable(QueryResponseTable):
         """
         # _sort is a hack to be able to convert from a legacy QueryResponse to
         # a table response.
-        if _sort:
-            records = iter_sort_response(response)
-        else:
-            records = response
-
+        records = iter_sort_response(response) if _sort else response
         data = []
         for record in records:
             row = defaultdict(lambda: None)
@@ -107,9 +102,7 @@ class VSOQueryResponseTable(QueryResponseTable):
                                      remove_empty=True)
 
     def total_size(self):
-        if 'size' not in self.colnames:
-            return np.nan
-        return np.nansum(self['size'])
+        return np.nan if 'size' not in self.colnames else np.nansum(self['size'])
 
     def add_error(self, exception):
         self.errors.append(exception)

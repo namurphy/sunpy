@@ -284,8 +284,7 @@ class VSOClient(BaseClient):
         """
         name = None
         if resp:
-            cdheader = resp.headers.get("Content-Disposition", None)
-            if cdheader:
+            if cdheader := resp.headers.get("Content-Disposition", None):
                 _, params = cgi.parse_header(cdheader)
                 name = params.get('filename', "")
                 # Work around https://github.com/sunpy/sunpy/issues/3372
@@ -315,10 +314,8 @@ class VSOClient(BaseClient):
         if not name:
             name = f"vso_file_{datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')}"
 
-        fname = pattern.format(file=name,
+        return pattern.format(file=name,
                                **queryresponserow.response_block_map)
-
-        return fname
 
     def fetch(self, query_response, path=None, methods=None, site=None,
               progress=True, overwrite=False, downloader=None, wait=True):
@@ -542,7 +539,7 @@ class VSOClient(BaseClient):
                         results.add_error('', '', DownloadFailed(dresponse))
                         continue
 
-            elif code == '300' or code == '412' or code == '405':
+            elif code in ['300', '412', '405']:
                 if code == '300':
                     try:
                         methods = self.multiple_choices(

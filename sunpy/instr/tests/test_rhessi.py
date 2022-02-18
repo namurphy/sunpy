@@ -67,8 +67,8 @@ def test_parse_observing_summary_dbase_file():
     obssum = rhessi.parse_observing_summary_dbase_file(
         get_test_filepath("hsi_obssumm_filedb_201104.txt"))
 
-    assert obssum['filename'][0][0:20] == 'hsi_obssumm_20110401'
-    assert obssum['filename'][1][0:20] == 'hsi_obssumm_20110402'
+    assert obssum['filename'][0][:20] == 'hsi_obssumm_20110401'
+    assert obssum['filename'][1][:20] == 'hsi_obssumm_20110402'
 
     assert obssum['orb_st'][0] == 0
     assert obssum['orb_st'][-1] == 0

@@ -90,7 +90,7 @@ class MapSequence:
         return len(self.maps)
 
     def __repr__(self):
-        names = set([m.__class__.__name__ for m in self.maps])
+        names = {m.__class__.__name__ for m in self.maps}
         return (object.__repr__(self) + "\n" +
                 f'MapSequence of {len(self.maps)} elements, with maps from {", ".join(names)}')
 
@@ -233,7 +233,7 @@ class MapSequence:
 
         """
         with NamedTemporaryFile('w', delete=False, prefix='sunpy.map.', suffix='.html') as f:
-            url = 'file://' + f.name
+            url = f'file://{f.name}'
             f.write(textwrap.dedent(f"""\
                 <html>
                     <title>Quicklook summary for {html.escape(object.__repr__(self))}</title>
@@ -455,13 +455,12 @@ class MapSequence:
         """
 
         if resample:
-            if self.all_maps_same_shape():
-                plot_sequence = MapSequence()
-                resample = u.Quantity(self.maps[0].dimensions) * np.array(resample)
-                for amap in self.maps:
-                    plot_sequence.maps.append(amap.resample(resample))
-            else:
+            if not self.all_maps_same_shape():
                 raise ValueError('Maps in mapsequence do not all have the same shape.')
+            plot_sequence = MapSequence()
+            resample = u.Quantity(self.maps[0].dimensions) * np.array(resample)
+            for amap in self.maps:
+                plot_sequence.maps.append(amap.resample(resample))
         else:
             plot_sequence = self
 
@@ -492,19 +491,17 @@ class MapSequence:
         mask are supplied with a mask that is full of False entries.
         If all the map shapes are not the same, a ValueError is thrown.
         """
-        if self.all_maps_same_shape():
-            data = np.swapaxes(np.swapaxes(np.asarray(
-                [m.data for m in self.maps]), 0, 1).copy(), 1, 2).copy()
-            if self.at_least_one_map_has_mask():
-                mask_sequence = np.zeros_like(data, dtype=bool)
-                for im, m in enumerate(self.maps):
-                    if m.mask is not None:
-                        mask_sequence[:, :, im] = m.mask
-                return ma.masked_array(data, mask=mask_sequence)
-            else:
-                return data
-        else:
+        if not self.all_maps_same_shape():
             raise ValueError('Not all maps have the same shape.')
+        data = np.swapaxes(np.swapaxes(np.asarray(
+            [m.data for m in self.maps]), 0, 1).copy(), 1, 2).copy()
+        if not self.at_least_one_map_has_mask():
+            return data
+        mask_sequence = np.zeros_like(data, dtype=bool)
+        for im, m in enumerate(self.maps):
+            if m.mask is not None:
+                mask_sequence[:, :, im] = m.mask
+        return ma.masked_array(data, mask=mask_sequence)
 
     def all_meta(self):
         """

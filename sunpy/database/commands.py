@@ -68,10 +68,7 @@ class DatabaseOperation(ABC):
 
 class CompositeOperation(DatabaseOperation):
     def __init__(self, operations=None):
-        if operations is None:
-            self._operations = []
-        else:
-            self._operations = operations
+        self._operations = [] if operations is None else operations
 
     @property
     def operations(self):
@@ -85,12 +82,9 @@ class CompositeOperation(DatabaseOperation):
 
     def __call__(self):
         for operation in self._operations:
-            # FIXME: What follows is the worst hack of my life. Enjoy.
-            # Without it, the test test_clear_database would fail.
-            f = open(os.devnull, 'w')
-            f.write(repr(operation))
-            f.flush()
-            f.close()
+            with open(os.devnull, 'w') as f:
+                f.write(repr(operation))
+                f.flush()
             operation()
 
     def undo(self):

@@ -124,17 +124,18 @@ def split_lines(file_lines):
     return the lines for the header and a list of lines for each section that
     is not 'None'.
     """
-    section_lines = []
-    for i, line in enumerate(file_lines):
-        if line.startswith(("I.", "IA.", "II.")):
-            section_lines.append(i)
+    section_lines = [
+        i
+        for i, line in enumerate(file_lines)
+        if line.startswith(("I.", "IA.", "II."))
+    ]
 
     header = file_lines[:section_lines[0]]
     header += [file_lines[s] for s in section_lines]
 
     # Append comments to the comment lines
     for l in section_lines:
-        file_lines[l] = '# ' + file_lines[l]
+        file_lines[l] = f'# {file_lines[l]}'
 
     t1_lines = file_lines[section_lines[0]:section_lines[1]]
     # Remove the space so table reads it correctly
@@ -143,7 +144,7 @@ def split_lines(file_lines):
     t3_lines = file_lines[section_lines[2]:]
 
     lines = [t1_lines, t2_lines, t3_lines]
-    for i, ll in enumerate(lines):
+    for ll in lines:
         if ll[2].strip() == 'None':
             del ll[2]
 
@@ -154,11 +155,7 @@ def get_meta_data(header):
     """
     Convert a list of header lines into a meta data dict.
     """
-    meta_lines = []
-    for l in header:
-        if l.startswith(':'):
-            meta_lines.append(l)
-
+    meta_lines = [l for l in header if l.startswith(':')]
     meta_data = {}
     for m in meta_lines:
         k, v = m.strip().split(':')[1:]
@@ -183,8 +180,8 @@ def parse_longitude(value):
     """
     Parse longitude in the form "W10" or "E10".
     """
-    lonsign = {'W': 1, 'E': -1}
     if "W" in value or "E" in value:
+        lonsign = {'W': 1, 'E': -1}
         return lonsign[value[3]] * float(value[4:])
 
 
@@ -192,8 +189,8 @@ def parse_latitude(value):
     """
     Parse latitude in the form "S10" or "N10".
     """
-    latsign = {'N': 1, 'S': -1}
     if "N" in value or "S" in value:
+        latsign = {'N': 1, 'S': -1}
         return latsign[value[0]] * float(value[1:3])
 
 
